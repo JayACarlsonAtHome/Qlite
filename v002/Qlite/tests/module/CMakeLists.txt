@@ -1,0 +1,4 @@
+add_executable(qlite_v002_module_test v002_module_test.cpp)
+target_compile_features(qlite_v002_module_test PRIVATE cxx_std_23)
+target_link_libraries(qlite_v002_module_test PRIVATE Qlite::Qlite_module)
+add_test(NAME qlite_v002_module_test COMMAND qlite_v002_module_test)
