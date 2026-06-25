@@ -47,6 +47,29 @@ if [ -r /etc/os-release ]; then
 fi
 echo "Platform family: $family"
 
+# --- enable a UTF-8 console so output renders (not mojibake) ---
+# Reports + logs are plain UTF-8 (═ · –): they render in editors (gedit, VS Code) AND on
+# GitHub. ANSI colour is terminal-native and lives only in live console output, never in
+# files (an editor shows raw escape bytes). UTF-8 just needs a locale — prefer an already
+# -UTF-8 LC_*/LANG, else fall back to C.UTF-8. The export carries into the build + tests.
+enable_utf8_console() {
+  case "${LC_ALL:-${LANG:-}}" in
+    *UTF-8*|*UTF8*|*utf-8*|*utf8*) return 0 ;;   # already UTF-8
+  esac
+  if locale -a 2>/dev/null | grep -qiE '^C\.UTF-?8$'; then
+    export LANG=C.UTF-8 LC_ALL=C.UTF-8
+  elif locale -a 2>/dev/null | grep -qiE 'en_US\.UTF-?8$'; then
+    export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+  else
+    echo "WARNING: no UTF-8 locale found — UTF-8 box-drawing output may render as mojibake."
+    echo "  Install one (Fedora/RHEL: sudo dnf install glibc-langpack-en;"
+    echo "  Debian/Mint: sudo locale-gen en_US.UTF-8), then re-run."
+    return 0
+  fi
+  echo "Console: UTF-8 enabled (LANG=$LANG)"
+}
+enable_utf8_console
+
 # look up an install command from recipes.conf:  recipe_cmd <component> <family>
 recipe_cmd() {
   [ -r "$RECIPES" ] || return 1
