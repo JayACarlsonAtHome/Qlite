@@ -24,7 +24,7 @@
 
 // Package version, "major.minor": major = the v002 API line, minor = the revision.
 // Bump the minor on each small code change; a real (breaking) change moves the major.
-[[nodiscard]] constexpr std::string_view version() noexcept { return "v002.001"; }
+[[nodiscard]] constexpr std::string_view version() noexcept { return "v002.003"; }
 
 // ---------------------------------------------------------------------------
 // Column extractors - one per return type (specialize to extend)
@@ -420,3 +420,142 @@ private:
     sqlite3* db_ = nullptr;
     std::unordered_map<std::string, Statement> cache_;
 };
+
+// ---------------------------------------------------------------------------
+// Scalar "top-1" query helpers (jac313 addition, exported back to canonical)
+// e.g. get_one_long(db, "SELECT n FROM t WHERE id=? LIMIT 1", id). Variadic binds.
+// No row -> the type default (0 / "" / 0.0). Genuine SQL/prepare errors PROPAGATE.
+// ---------------------------------------------------------------------------
+template<class... B>
+std::int64_t get_one_long(Sqlite& db, const char* sql, B&&... b) {
+    std::int64_t v = 0;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) st.get(v);
+    return v;
+}
+
+template<class... B>
+std::string get_one_string(Sqlite& db, const char* sql, B&&... b) {
+    std::string v;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) st.get(v);
+    return v;
+}
+
+template<class... B>
+double get_one_double(Sqlite& db, const char* sql, B&&... b) {
+    double v = 0.0;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) st.get(v);
+    return v;
+}
+
+template<class... B>
+std::int64_t get_one_long_or(Sqlite& db, const char* sql, std::int64_t deflt, B&&... b) {
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) { std::int64_t v = 0; st.get(v); return v; }
+    return deflt;
+}
+
+template<class... B>
+std::string get_one_string_or(Sqlite& db, const char* sql, std::string deflt, B&&... b) {
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) { std::string v; st.get(v); return v; }
+    return deflt;
+}
+
+// Debug variants
+template<class... B>
+std::int64_t get_one_long(Sqlite& db, const char* sql, bool debug, B&&... b) {
+    if (debug) std::cerr << "[SQL] " << sql << '\n';
+    std::int64_t v = 0;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) {
+        st.get(v);
+        if (debug) std::cerr << "[SQL] -> " << v << '\n';
+    } else if (debug) {
+        std::cerr << "[SQL] -> (no row)\n";
+    }
+    return v;
+}
+
+template<class... B>
+std::string get_one_string(Sqlite& db, const char* sql, bool debug, B&&... b) {
+    if (debug) std::cerr << "[SQL] " << sql << '\n';
+    std::string v;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) {
+        st.get(v);
+        if (debug) std::cerr << "[SQL] -> '" << v << "'\n";
+    } else if (debug) {
+        std::cerr << "[SQL] -> (no row)\n";
+    }
+    return v;
+}
+
+template<class... B>
+double get_one_double(Sqlite& db, const char* sql, bool debug, B&&... b) {
+    if (debug) std::cerr << "[SQL] " << sql << '\n';
+    double v = 0.0;
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) {
+        st.get(v);
+        if (debug) std::cerr << "[SQL] -> " << v << '\n';
+    } else if (debug) {
+        std::cerr << "[SQL] -> (no row)\n";
+    }
+    return v;
+}
+
+template<class... B>
+std::int64_t get_one_long_or(Sqlite& db, const char* sql, bool debug, std::int64_t deflt, B&&... b) {
+    if (debug) std::cerr << "[SQL] " << sql << '\n';
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) {
+        std::int64_t v = 0; st.get(v);
+        if (debug) std::cerr << "[SQL] -> " << v << '\n';
+        return v;
+    }
+    if (debug) std::cerr << "[SQL] -> (no row, using default " << deflt << ")\n";
+    return deflt;
+}
+
+template<class... B>
+std::string get_one_string_or(Sqlite& db, const char* sql, bool debug, std::string deflt, B&&... b) {
+    if (debug) std::cerr << "[SQL] " << sql << '\n';
+    auto st = db.prepare(sql);
+    if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
+    if (st.step()) {
+        std::string v; st.get(v);
+        if (debug) std::cerr << "[SQL] -> '" << v << "'\n";
+        return v;
+    }
+    if (debug) std::cerr << "[SQL] -> (no row, using default)\n";
+    return deflt;
+}
+
+// Convenience debug shorthands
+template<class... B> inline std::int64_t get_one_long_debug(Sqlite& db, const char* sql, B&&... b) {
+    return get_one_long(db, sql, true, std::forward<B>(b)...);
+}
+template<class... B> inline std::string get_one_string_debug(Sqlite& db, const char* sql, B&&... b) {
+    return get_one_string(db, sql, true, std::forward<B>(b)...);
+}
+template<class... B> inline double get_one_double_debug(Sqlite& db, const char* sql, B&&... b) {
+    return get_one_double(db, sql, true, std::forward<B>(b)...);
+}
+template<class... B> inline std::int64_t get_one_long_or_debug(Sqlite& db, const char* sql, std::int64_t deflt, B&&... b) {
+    return get_one_long_or(db, sql, true, deflt, std::forward<B>(b)...);
+}
+template<class... B> inline std::string get_one_string_or_debug(Sqlite& db, const char* sql, std::string deflt, B&&... b) {
+    return get_one_string_or(db, sql, true, deflt, std::forward<B>(b)...);
+}
