@@ -38,6 +38,11 @@ inline std::int64_t column<std::int64_t>(sqlite3_stmt* stmt, int col) {
 }
 
 template<>
+inline int column<int>(sqlite3_stmt* stmt, int col) {
+    return sqlite3_column_int(stmt, col);
+}
+
+template<>
 inline double column<double>(sqlite3_stmt* stmt, int col) {
     return sqlite3_column_double(stmt, col);
 }

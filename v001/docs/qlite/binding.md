@@ -27,8 +27,24 @@ The single customization seam is **`bind_value`** (in) and **`column<T>`** (out)
 a new type by specializing those, and the variadic machinery picks it up everywhere with
 no other changes. Both are part of the frozen surface.
 
-_Exact signatures: see `Sqlite.body.hpp`; summarized here, **_TBD_** for the precise
-template forms._
+Both are free functions in `Sqlite.body.hpp`:
+
+```cpp
+template <class T> void bind_value(sqlite3_stmt* st, int idx, T v);  // one overload per bound type
+template <class T> T    column(sqlite3_stmt* st, int col);           // one specialization per read type
+```
+
+**Types wired out of the box:**
+
+| Type | `bind_value` (in) | `column<T>` (out) |
+|------|:-----------------:|:-----------------:|
+| `std::int64_t` | yes | yes |
+| `int` | yes | yes |
+| `double` | yes | yes |
+| `std::string` | yes | yes |
+| `std::string_view` / `const char*` | yes | — (read as `std::string`) |
+| blob: `std::span<const std::byte>` in / `std::vector<std::byte>` out | yes | yes |
+| `std::optional<T>` (SQL NULL ⇄ `std::nullopt`) | yes | yes (int64 / double / string) |
 
 ---
 
@@ -65,8 +81,20 @@ auto rows = db.prepare("SELECT id, name FROM t").get_all<int, std::string>();
 int i = st.column_index("name");                        // column by name
 ```
 
-_Exact method names/overloads are summarized from the feature spec; precise signatures are
-**_TBD_** against the headers._
+Precise `Statement` extraction API (from `Sqlite.body.hpp`):
+
+```cpp
+template <class... Ts> void                            get(Ts&... out);      // fill refs, left to right
+template <class... Ts> std::tuple<Ts...>              get_row();             // current row as a tuple
+template <class... Ts> std::vector<std::tuple<Ts...>> get_all();             // every remaining row
+template <class T>      T                             get_by_name(std::string_view col);
+int                                                   column_index(std::string_view col);  // throws if absent
+int                                                   column_count() const;
+std::string                                           column_name(int i) const;
+```
+
+Each of `get` / `get_row` / `get_all` / `get_by_name` routes through `column<T>`, so every
+type in the table above works in all of them (e.g. `get_all<int, std::string>()`).
 
 ---
 

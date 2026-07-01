@@ -274,6 +274,33 @@ void test_expected_path() {
 #endif
 }
 
+// column<int> extractor: read an INTEGER column straight into a plain `int`
+// (distinct from the std::int64_t path). Covers every route through column<T> —
+// get(int&), get_by_name<int>, and get_all<int>.
+void test_column_int() {
+    Sqlite db(":memory:");
+    db.exec("CREATE TABLE t (n INTEGER)");
+    db.exec("INSERT INTO t VALUES (?)", std::int64_t{-3});
+    db.exec("INSERT INTO t VALUES (?)", std::int64_t{7});
+
+    auto stmt = db.prepare("SELECT n FROM t ORDER BY n");
+    CHECK(stmt.step());
+    int first = 0;
+    stmt.get(first);                        // get(int&) -> column<int>
+    CHECK(first == -3);
+    CHECK(stmt.get_by_name<int>("n") == -3); // get_by_name<int> -> column<int>
+    CHECK(stmt.step());
+    int second = 0;
+    stmt.get(second);
+    CHECK(second == 7);
+    CHECK(!stmt.step());
+
+    auto all = db.prepare("SELECT n FROM t ORDER BY n").get_all<int>();  // get_all<int>
+    CHECK(all.size() == 2);
+    CHECK(std::get<0>(all[0]) == -3);
+    CHECK(std::get<0>(all[1]) == 7);
+}
+
 } // namespace
 
 int main() {
@@ -288,6 +315,7 @@ int main() {
     test_prepared_statement_cache();
     test_string_view_and_named_params();
     test_column_by_name();
+    test_column_int();
     test_blob_roundtrip();
     test_expected_path();
 
