@@ -24,7 +24,7 @@
 
 // Package version, "major.minor": major = the v002 API line, minor = the revision.
 // Bump the minor on each small code change; a real (breaking) change moves the major.
-[[nodiscard]] constexpr std::string_view version() noexcept { return "v002.003"; }
+[[nodiscard]] constexpr std::string_view version() noexcept { return "v002.004"; }
 
 // ---------------------------------------------------------------------------
 // Column extractors - one per return type (specialize to extend)
