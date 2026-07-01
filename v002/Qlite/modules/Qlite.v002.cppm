@@ -29,6 +29,7 @@ module;
 #  include <vector>
 #  include <span>
 #  include <unordered_map>
+#  include <iostream>
 #  if __has_include(<expected>)
 #    include <expected>
 #  endif
