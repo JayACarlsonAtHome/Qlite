@@ -6,7 +6,8 @@
  *   #include <Qlite/v001.hpp>
  *   Qlite::v001::Sqlite db("app.db");
  *
- * Public symbols: Sqlite, SqliteError, bind_value, column, version.
+ * Public symbols: Sqlite (Statement, Transaction, prepare/prepare_cached, get_one_*),
+ * SqliteError, bind_value, column, version.
  */
 
 #include "Qlite/v001/Sqlite.hpp"

@@ -34,7 +34,7 @@ try {
     db.exec("INSERT INTO t VALUES (?)", 1);
 } catch (const Qlite::v002::SqliteError& e) {
     int rc = e.code();          // the sqlite3 result code (e.g. SQLITE_CONSTRAINT)
-    // e.what() — human-readable message  (_exact text: TBD_)
+    // e.what() — msg + " (code " + std::to_string(errcode) + ")"
 }
 ```
 
@@ -51,7 +51,7 @@ auto r = db.try_exec("INSERT INTO t VALUES (?)", 1);
 if (!r) {
     int rc = r.error().code();      // the error, as a value — no exception thrown
 } else {
-    // success — *r is the result (e.g. rows affected)  (_exact value type: TBD_)
+    // try_exec: success is void (empty expected); try_step: *r is bool (true = SQLITE_ROW, false = SQLITE_DONE)
 }
 #endif
 ```
@@ -79,5 +79,9 @@ auto-rolls-back during unwinding; on the `try_*` path you inspect the `expected`
 whether to `commit()` — see [transactions.md](transactions.md). A `QLITE_PRE` violation is
 neither — it signals a bug to fix, not a condition to handle.
 
-_Exact return value types of the `try_*` overloads and the full error-reporting contract:
-**_TBD_** — owned by `Sqlite.body.hpp`._
+| API | Success | Failure |
+|-----|---------|---------|
+| `try_exec(sql)` | `std::expected<void, SqliteError>` (empty) | `std::unexpected(SqliteError)` |
+| `try_step()` | `std::expected<bool, SqliteError>` (`true` = row, `false` = done) | `std::unexpected(SqliteError)` |
+
+Guarded by `#if defined(__cpp_lib_expected)`. Variadic `try_exec(sql, args...)` is not provided — only the throwing `exec(sql, args...)` binds parameters.

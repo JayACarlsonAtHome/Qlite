@@ -52,12 +52,12 @@ the "forgot to roll back on the error path" bug by construction.
 
 | Question | Intended answer |
 |----------|-----------------|
-| Is the guard movable? | _TBD_ — typically move-only, non-copyable. |
-| Double commit / commit-after-rollback | _TBD_ — define whether it's a no-op or an error. |
-| Nested transactions / savepoints | _TBD_ — whether `transaction()` nests via `SAVEPOINT`. |
-| Exceptions during the destructor's rollback | _TBD_ — destructors shouldn't throw; document the swallow/log behavior. |
+| Is the guard movable? | **Yes** — move-only; copy ctor/assign are `= delete`. |
+| Double commit / commit-after-rollback | **No-op** — `commit()` / `rollback()` null out the internal `db_` pointer; a second call does nothing. Not an error. |
+| Nested transactions / savepoints | **No** — flat `BEGIN TRANSACTION` only; no `SAVEPOINT` nesting. |
+| Exceptions during the destructor's rollback | **Swallowed** — `~Transaction()` wraps `rollback()` in `try { … } catch (...) {}`; no logging. |
 
-_These are owned by the implementation; fill them against `Sqlite.body.hpp`._
+_Filled against `Sqlite.body.hpp` (`Transaction` class). `active()` reports whether the guard still holds an open transaction._
 
 ---
 

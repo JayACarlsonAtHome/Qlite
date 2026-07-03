@@ -4,10 +4,11 @@ The **C++23** wrapper component of the [v001 world](../README.md).
 
 `Qlite::v001` is a **header-only** SQLite3 wrapper — the canonical evolution of the legacy
 `jacQlite` / `jac::qlite` header-only wrapper. It depends only on system SQLite3. Public
-symbols: `Sqlite`, `SqliteError`, `bind_value`, `column`, `version`.
+symbols: `Sqlite` (with `Statement`, `Transaction`, `prepare`/`prepare_cached`, `get_one_*`
+helpers), `SqliteError`, `bind_value`, `column`, `version`.
 
-`version()` returns the package's `"major.minor"` version: major is the `v001` API line,
-minor bumps on each small code change. _Exact scheme TBD._
+`version()` returns `"major.minor"`: major = the `v001` API line, minor = revision (bump on
+each small code change; breaking changes move major). Current: **`v001.005`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v001` ↔ `jac313::Qlite::v001`.
 

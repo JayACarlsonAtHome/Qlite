@@ -29,7 +29,7 @@
 #include <vector>
 #include <span>
 #include <unordered_map>
-#include <iostream>   // std::cerr in the debug query helpers (Sqlite.body.hpp)
+#include <cstdio>     // fprintf in debug get_one_* helpers (also in Sqlite.body.hpp)
 #if __has_include(<expected>)
 #  include <expected>
 #endif

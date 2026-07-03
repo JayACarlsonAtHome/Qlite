@@ -101,6 +101,21 @@ type in the table above works in all of them (e.g. `get_all<int, std::string>()`
 
 ---
 
+## Scalar `get_one_*` helpers
+
+Additive helpers in `Sqlite.body.hpp` for single-value queries (not part of the frozen
+Store SQL surface):
+
+| Helper | Behaviour |
+|--------|-----------|
+| `get_one_long` / `get_one_string` / `get_one_double` | Variadic binds; no row → type default (0 / `""` / 0.0) |
+| `get_one_long_or` / `get_one_string_or` | Explicit default when no row matches |
+| `get_one_*_debug` or `debug=true` overload | Logs SQL and result to **stderr via `fprintf`** (not `std::cerr`) |
+
+SQL/prepare errors propagate — a malformed query must not silently read as a clean zero.
+
+---
+
 ## How the pieces fit
 
 Binding feeds a `Statement` (see [persistence.md](persistence.md)); extraction reads it

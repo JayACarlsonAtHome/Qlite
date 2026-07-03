@@ -5,11 +5,12 @@ The **C++26** wrapper component of the [v002 world](../README.md).
 `Qlite::v002` is a **header-only** SQLite3 wrapper — the canonical evolution of the legacy
 `jacQlite` / `jac::qlite` header-only wrapper, built on **real C++26** (a `contracts`
 pre/post/assert shim, etc. — see [Cpp26_Adoption.md](../docs/Cpp26_Adoption.md)). It
-depends only on system SQLite3. Public symbols: `Sqlite`, `SqliteError`, `bind_value`,
-`column`, `version`.
+depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Transaction`,
+`prepare`/`prepare_cached`, `get_one_*` helpers), `SqliteError`, `bind_value`, `column`,
+`version`.
 
-`version()` returns the package's `"major.minor"` version: major is the `v002` API line,
-minor bumps on each small code change. _Exact scheme TBD._
+`version()` returns `"major.minor"`: major = the `v002` API line, minor = revision (bump on
+each small code change; breaking changes move major). Current: **`v002.005`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v002` ↔ `jac313::Qlite::v002`.
 

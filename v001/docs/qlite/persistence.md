@@ -24,7 +24,9 @@ db.exec("INSERT INTO t VALUES (?, ?)", 1, std::string("a"));
 | `Sqlite("app.db")` | file-backed database (created if absent) |
 | `Sqlite(":memory:")` | in-memory database (fast, non-durable — see [HowToReadResults.md](../HowToReadResults.md)) |
 
-_Open flags / threading mode / busy-timeout behavior: **_TBD_** — owned by the ctor._
+| Default open flags | `SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE` (overridable via ctor's `flags` parameter) |
+| Busy timeout | `sqlite3_busy_timeout(db_, 5000)` — 5 seconds, set immediately after open (tolerates transient locks, e.g. gcc-then-clang in `--ctest`) |
+| Threading mode | Not set by Qlite — SQLite/library default |
 
 ---
 
@@ -69,8 +71,10 @@ auto& again = db.prepare_cached("INSERT INTO t VALUES (?, ?)"); // cache hit —
 | Lifetime | caller's | the connection's (cache lives with `Sqlite`) |
 | Reset between uses | `reset()` / `clear_bindings()` | same — the cache hands back the same statement |
 
-_Cache eviction policy and lifetime guarantees of the returned reference: **_TBD_** (a
-candidate enhancement is an LRU cap — see [UserEnhancements.md](../UserEnhancements.md))._
+No eviction — one cached `Statement` per distinct SQL string for the connection's lifetime.
+The returned `Statement&` is stable across `unordered_map` rehash (node-based storage).
+Invalidated by `clear_cache()` or when `Sqlite` is destroyed. An LRU cap remains a candidate
+enhancement — see [UserEnhancements.md](../UserEnhancements.md).
 
 ---
 

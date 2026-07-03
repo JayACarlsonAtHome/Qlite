@@ -7,7 +7,7 @@ quick start and layout; these pages are the detail behind each capability. v002 
 
 | Doc | Covers |
 |-----|--------|
-| [binding.md](binding.md) | Binding and extraction — the variadic "peel first, recurse" pattern, `bind_value` / `column<T>`, the ergonomic binds (`string_view`, blob span, column-by-name, named parameters, `get_all<Ts...>()`) |
+| [binding.md](binding.md) | Binding and extraction — the variadic "peel first, recurse" pattern, `bind_value` / `column<T>`, the ergonomic binds (`string_view`, blob span, column-by-name, named parameters, `get_all<Ts...>()`), scalar `get_one_*` query helpers (incl. debug/fprintf variants) |
 | [transactions.md](transactions.md) | Transactions — `begin`/`commit`/`rollback` and the **RAII transaction guard** (`db.transaction()`, commit-or-auto-rollback) |
 | [persistence.md](persistence.md) | The connection, RAII lifetimes, and the **prepared-statement cache** (`prepare` vs `prepare_cached`) |
 | [errors.md](errors.md) | Error handling — `SqliteError` (`code()`), the throwing API, and the **`std::expected` non-throwing path** (`try_exec` / `try_step`) |
