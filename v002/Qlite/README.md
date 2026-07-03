@@ -10,7 +10,7 @@ depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Tra
 `version`.
 
 `version()` returns `"major.minor"`: major = the `v002` API line, minor = revision (bump on
-each small code change; breaking changes move major). Current: **`v002.005`**.
+each small code change; breaking changes move major). Current: **`v002.006`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v002` ↔ `jac313::Qlite::v002`.
 

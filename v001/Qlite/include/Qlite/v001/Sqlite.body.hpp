@@ -23,7 +23,7 @@
 
 // Package version, "major.minor": major = the v001 API line, minor = the revision.
 // Bump the minor on each small code change; a real (breaking) change moves the major.
-[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.005"; }
+[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.006"; }
 
 #include <cstdio>  // for fprintf in debug helpers; the body normally relies on including header for std, but this addition needs it explicitly for the fragment.
 

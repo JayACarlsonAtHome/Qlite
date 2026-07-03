@@ -8,7 +8,7 @@ symbols: `Sqlite` (with `Statement`, `Transaction`, `prepare`/`prepare_cached`, 
 helpers), `SqliteError`, `bind_value`, `column`, `version`.
 
 `version()` returns `"major.minor"`: major = the `v001` API line, minor = revision (bump on
-each small code change; breaking changes move major). Current: **`v001.005`**.
+each small code change; breaking changes move major). Current: **`v001.006`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v001` ↔ `jac313::Qlite::v001`.
 
