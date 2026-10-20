@@ -23,7 +23,7 @@
 
 // Package version, "major.minor": major = the v001 API line, minor = the revision.
 // Bump the minor on each small code change; a real (breaking) change moves the major.
-[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.007"; }
+[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.008"; }
 
 #include <cstdio>  // for fprintf in debug helpers; the body normally relies on including header for std, but this addition needs it explicitly for the fragment.
 
@@ -491,7 +491,7 @@ std::int64_t get_one_long(Sqlite& db, const char* sql, bool debug, B&&... b) {
     if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
     if (st.step()) {
         st.get(v);
-        if (debug) ::fprintf(stderr, "[SQL] -> %lld\n", (long long)v);
+        if (debug) ::fprintf(stderr, "[SQL] -> %lld\n", static_cast<long long>(v));
     } else if (debug) {
         ::fprintf(stderr, "[SQL] -> (no row)\n");
     }
@@ -535,10 +535,10 @@ std::int64_t get_one_long_or(Sqlite& db, const char* sql, bool debug, std::int64
     if constexpr (sizeof...(B) > 0) st.bind(std::forward<B>(b)...);
     if (st.step()) {
         std::int64_t v = 0; st.get(v);
-        if (debug) ::fprintf(stderr, "[SQL] -> %lld\n", (long long)v);
+        if (debug) ::fprintf(stderr, "[SQL] -> %lld\n", static_cast<long long>(v));
         return v;
     }
-    if (debug) ::fprintf(stderr, "[SQL] -> (no row, using default %lld)\n", (long long)deflt);
+    if (debug) ::fprintf(stderr, "[SQL] -> (no row, using default %lld)\n", static_cast<long long>(deflt));
     return deflt;
 }
 
