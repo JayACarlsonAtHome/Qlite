@@ -7,9 +7,9 @@
 //   * Sqlite.hpp        — textual header for non-module consumers. Provides the
 //                         std + <sqlite3.h> declarations via textual #include,
 //                         then includes this body inside `namespace { ... }`.
-//   * Qlite.v001.cppm   — module interface. Provides std via `import std;`
-//                         (pilot) or textual includes, and <sqlite3.h> via the
-//                         global module fragment, then includes this body inside
+//   * Qlite.v001.cppm   — module interface. Provides std via textual includes
+//                         and <sqlite3.h> via the global module fragment, then
+//                         includes this body inside
 //                         `export namespace { ... }`.
 //
 // Keeping the implementation here (with no std/sqlite includes of its own) lets
@@ -23,7 +23,7 @@
 
 // Package version, "major.minor": major = the v001 API line, minor = the revision.
 // Bump the minor on each small code change; a real (breaking) change moves the major.
-[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.008"; }
+[[nodiscard]] constexpr std::string_view version() noexcept { return "v001.009"; }
 
 #include <cstdio>  // for fprintf in debug helpers; the body normally relies on including header for std, but this addition needs it explicitly for the fragment.
 

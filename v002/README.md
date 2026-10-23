@@ -68,7 +68,7 @@ system SQLite3. Full prerequisites are in [docs/Setup.md](docs/Setup.md) and
 | [docs/Cpp26_Adoption.md](docs/Cpp26_Adoption.md) | The C++26 adoption story — the `contracts` shim, what C++26 buys, toolchain notes |
 | [docs/Setup.md](docs/Setup.md) | Toolchain, bootstrapping, building, running tests |
 | [docs/RunAllTests.md](docs/RunAllTests.md) | The test runbook |
-| [docs/Modules.md](docs/Modules.md) | C++ modules + the `import std;` story for v002 |
+| [docs/Modules.md](docs/Modules.md) | C++ modules for v002 |
 | [docs/Maturity.md](docs/Maturity.md) | Honest maturity self-assessment |
 | [docs/Memory-And-Concurrency.md](docs/Memory-And-Concurrency.md) | valgrind / thread-safety notes |
 | [docs/HowToReadResults.md](docs/HowToReadResults.md) | How to read the result numbers |

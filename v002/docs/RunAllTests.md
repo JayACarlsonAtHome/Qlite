@@ -68,7 +68,7 @@ cmake --build build-mod && ctest --test-dir build-mod
 
 - **valgrind** (memcheck) over the wrapper — see
   [Memory-And-Concurrency.md](Memory-And-Concurrency.md).
-- **Module + `import std;`** path — see [Modules.md](Modules.md).
+- **Module** build — see [Modules.md](Modules.md).
 - **C++26 contracts** — the shim's runtime checks run as ordinary assertions in the suite;
   see [Cpp26_Adoption.md](Cpp26_Adoption.md).
 

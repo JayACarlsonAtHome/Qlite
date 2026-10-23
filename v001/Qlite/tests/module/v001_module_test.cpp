@@ -7,9 +7,8 @@ import Qlite.v001;
 // Functional module smoke. This consumer is an ordinary TU (textual std includes)
 // that imports the module and EXERCISES the exported symbols — Sqlite, Statement,
 // bind/column, SqliteError, plus the new transaction guard — end to end against an
-// in-memory database. Driving a real round-trip proves both module front-ends
-// actually export working definitions (textual export-namespace path for clang AND
-// the import-std path for the g++ pilot).
+// in-memory database. Driving a real round-trip proves the module actually exports
+// working definitions.
 int main() {
     using namespace Qlite::v001;
     try {

@@ -12,8 +12,8 @@ headers; the `std::expected` non-throwing path is guarded by `__cpp_lib_expected
 compiles out where the library feature is absent.
 
 **`g++-15` and a recent Clang** are the intended standard toolchains. Module builds need
-the **Ninja** generator; `import std;` needs a specific pinned CMake (see
-[Modules.md](Modules.md)).
+the **Ninja** generator and CMake >= 3.28 (the distro package
+is enough; see [Modules.md](Modules.md)).
 
 ### Getting g++-15
 

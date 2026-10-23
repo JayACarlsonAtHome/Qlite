@@ -1,12 +1,5 @@
 cmake_minimum_required(VERSION 3.26)
 
-# Native `import std;` (any *_IMPORT_STD opt-in) needs CMake's experimental std-module
-# feature ARMED before project() enables CXX. UUID is pinned to CMake 4.3.3 (see
-# docs/Setup.md); bump it for a different CMake. Only armed when a build opts in.
-if(QLITE_IMPORT_STD OR QLITE_SETUP_IMPORT_STD)
-    set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b")
-endif()
-
 project(Qlite_world_v002 VERSION 0.1.0 LANGUAGES CXX
         DESCRIPTION "Qlite v002 — C++26 world (Qlite SQLite wrapper + Setup sensing)")
 

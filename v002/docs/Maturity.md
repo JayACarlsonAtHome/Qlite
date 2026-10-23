@@ -37,7 +37,7 @@ The honest split to assess is **craft vs. structure**, plus a **frontier caveat*
 - **Structure** — solo author, no external CI by design (the local runner *is* the CI),
   results committed into the repo. _Rung: TBD._
 - **Frontier caveat** — v002 stands on **experimental** ground (C++26, a contracts *shim*
-  not native contracts, modules + `import std;`). That's deliberate and valuable as a
+  not native contracts, C++ modules). That's deliberate and valuable as a
   toolchain example, but it caps "settledness" until the standard and tools catch up.
 
 ## What would move the needle

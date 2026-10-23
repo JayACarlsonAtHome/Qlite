@@ -73,8 +73,8 @@ import Qlite.v001;   // exposes Qlite::v001::{Sqlite, …}
 ```
 
 Module builds require the Ninja generator. The module exports the same public API,
-qualified under `Qlite::v001`, as the textual header. The `import std;` story, the
-quirks, and the curses are in [docs/Modules.md](../docs/Modules.md).
+qualified under `Qlite::v001`, as the textual header. Module notes and
+pitfalls are in [docs/Modules.md](../docs/Modules.md).
 
 ## CMake targets
 

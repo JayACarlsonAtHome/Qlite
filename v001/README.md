@@ -63,7 +63,7 @@ and the test runbook are in [docs/Setup.md](docs/Setup.md) and
 | [docs/Architecture.md](docs/Architecture.md) | Layout, the umbrella/version-world model, the standalone+embed philosophy, the forward-port-to-jac313 story |
 | [docs/Setup.md](docs/Setup.md) | Toolchain, bootstrapping, building, running tests |
 | [docs/RunAllTests.md](docs/RunAllTests.md) | The test runbook |
-| [docs/Modules.md](docs/Modules.md) | C++23 modules + the `import std;` story for v001 |
+| [docs/Modules.md](docs/Modules.md) | C++23 modules for v001 |
 | [docs/Maturity.md](docs/Maturity.md) | Honest maturity self-assessment |
 | [docs/Memory-And-Concurrency.md](docs/Memory-And-Concurrency.md) | valgrind / thread-safety notes |
 | [docs/HowToReadResults.md](docs/HowToReadResults.md) | How to read the result numbers |

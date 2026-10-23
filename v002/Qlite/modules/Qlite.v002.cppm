@@ -2,11 +2,8 @@ module;
 
 // Qlite.v002 — module interface over the shared implementation body
 // (Sqlite.body.hpp). Both build configurations export the SAME public API under
-// `Qlite::v002` (matching the textual header); the ONLY difference is how the std
-// library is made visible to the body:
-//
-//   QLITE_IMPORT_STD  ON  -> `import std;`            (g++ pilot)
-//                     OFF -> textual std #includes    (clang / fallback)
+// `Qlite::v002` (matching the textual header); the std library is made visible to the
+// body with textual std #includes in the global module fragment.
 //
 // <sqlite3.h> (a C library) is always textual in the global module fragment.
 // The body is defined in the module purview and exported via `export namespace`,
@@ -16,30 +13,24 @@ module;
 
 #include <sqlite3.h>
 
-#ifndef QLITE_IMPORT_STD
-#  include <string>
-#  include <string_view>
-#  include <stdexcept>
-#  include <utility>
-#  include <type_traits>
-#  include <cstddef>
-#  include <cstdint>
-#  include <optional>
-#  include <tuple>
-#  include <vector>
-#  include <span>
-#  include <unordered_map>
-#  include <cstdio>
-#  if __has_include(<expected>)
-#    include <expected>
-#  endif
+#include <string>
+#include <string_view>
+#include <stdexcept>
+#include <utility>
+#include <type_traits>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <tuple>
+#include <vector>
+#include <span>
+#include <unordered_map>
+#include <cstdio>
+#if __has_include(<expected>)
+#  include <expected>
 #endif
 
 export module Qlite.v002;
-
-#ifdef QLITE_IMPORT_STD
-import std;
-#endif
 
 export namespace Qlite::v002 {
 #include "Qlite/v002/Sqlite.body.hpp"

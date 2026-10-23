@@ -6,10 +6,6 @@ project(Setup_v002 VERSION 0.1.0 LANGUAGES CXX)
 # C++23 standard library, so it can be reused by any build tooling and via the module
 # `import Qlite.setup.v002;`. Must build before consumers.
 
-# Experimental `import std` pilot guard (CMake EXPERIMENTAL UUID). Kept identical to the
-# jac313 source so the same opt-in works here.
-set(QLITE_SETUP_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b")
-
 option(QLITE_SETUP_BUILD_TESTS "Build and register tests" OFF)
 option(QLITE_SETUP_BUILD_MODULES "Build Qlite.setup.v002 C++23 module" OFF)
 

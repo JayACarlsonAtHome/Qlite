@@ -14,8 +14,8 @@ C++26 contracts are expressed through a shim (runtime today; native when `__cpp_
 lands).
 
 **gcc-toolset-15 / GCC 15.2** and **clang 21** are the intended C++26 gates. Module builds
-need the **Ninja** generator; `import std;` needs a specific pinned CMake (see
-[Modules.md](Modules.md)).
+need the **Ninja** generator and CMake >= 3.28 (the distro package
+is enough; see [Modules.md](Modules.md)).
 
 ### Getting a C++26 compiler
 

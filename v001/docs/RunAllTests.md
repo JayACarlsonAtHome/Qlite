@@ -67,7 +67,7 @@ cmake --build build-mod && ctest --test-dir build-mod
 
 - **valgrind** (memcheck) over the wrapper — see
   [Memory-And-Concurrency.md](Memory-And-Concurrency.md).
-- **Module + `import std;`** path — see [Modules.md](Modules.md).
+- **Module** build — see [Modules.md](Modules.md).
 
 _Which gates are wired into the runner: TBD._
 
