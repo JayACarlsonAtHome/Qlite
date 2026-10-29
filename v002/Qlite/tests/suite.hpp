@@ -114,6 +114,8 @@ void run(D& db, const Dialect& d) {
           d.name + ": get_top_one<optional> with no row is nullopt (not an id)");
     check(get_top_one<std::optional<std::int64_t>>(db, "SELECT id FROM items ORDER BY id") == 1, d.name + ": get_top_one<optional> of a row");
     check(!get_top_one<std::optional<std::string>>(db, "SELECT note FROM items ORDER BY id"), d.name + ": get_top_one<optional> of NULL");
+    check(get_top_one_string_or(db, std::format("SELECT name FROM items WHERE id = {}", p(1)).c_str(), "none", std::int64_t{99}) == "none",
+          d.name + ": a text default is the default, not debug");
     check(get_top_one_or<double>(db, std::format("SELECT price FROM items WHERE id = {}", p(1)).c_str(), 7.5, std::int64_t{99}) == 7.5,
           d.name + ": get_top_one_or<double>'s default");
 

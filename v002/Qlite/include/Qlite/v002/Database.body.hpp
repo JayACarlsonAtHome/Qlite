@@ -197,16 +197,18 @@ template<typename T, Database D, class... B>
 T get_top_one(D& db, const char* sql, B&&... b) {
     return top_one_row<T>(db, sql, false, std::forward<B>(b)...).value_or(T{});
 }
-template<typename T, Database D, class... B>
-T get_top_one(D& db, const char* sql, bool debug, B&&... b) {
+// `debug` takes only a real bool (std::same_as), so a text default such as "none" is never
+// taken for it (a const char* would otherwise convert to bool before it converts to std::string).
+template<typename T, Database D, std::same_as<bool> Debug, class... B>
+T get_top_one(D& db, const char* sql, Debug debug, B&&... b) {
     return top_one_row<T>(db, sql, debug, std::forward<B>(b)...).value_or(T{});
 }
 template<typename T, Database D, class... B>
 T get_top_one_or(D& db, const char* sql, T deflt, B&&... b) {
     return top_one_row<T>(db, sql, false, std::forward<B>(b)...).value_or(std::move(deflt));
 }
-template<typename T, Database D, class... B>
-T get_top_one_or(D& db, const char* sql, bool debug, T deflt, B&&... b) {
+template<typename T, Database D, std::same_as<bool> Debug, class... B>
+T get_top_one_or(D& db, const char* sql, Debug debug, T deflt, B&&... b) {
     return top_one_row<T>(db, sql, debug, std::forward<B>(b)...).value_or(std::move(deflt));
 }
 template<typename T, Database D, class... B>
