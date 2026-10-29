@@ -69,7 +69,7 @@ Additive conveniences on top of the core:
 |-------------|--------------|
 | `string_view` binds | bind text without forcing a `std::string` copy |
 | **blob binds** | `std::span<const std::byte>` binds a binary blob directly |
-| column-by-name | `column_index(name)`, `get_by_name(name)`, plus `column_count()` / `column_name(i)` for introspection |
+| column-by-name | `column_index(name)`, `get_by_name(name)`, `get_at(i)` (by index), plus `column_count()` / `column_name(i)` for introspection |
 | named-parameter binds | `bind_param(":name", v)` binds to a `:name` placeholder instead of a positional `?` |
 | whole-result extraction | `get_all<Ts...>()` pulls every row as a container of `std::tuple<Ts...>` |
 
@@ -88,12 +88,13 @@ template <class... Ts> void                            get(Ts&... out);      // 
 template <class... Ts> std::tuple<Ts...>              get_row();             // current row as a tuple
 template <class... Ts> std::vector<std::tuple<Ts...>> get_all();             // every remaining row
 template <class T>      T                             get_by_name(std::string_view col);
+template <class T>      T                             get_at(int col);      // 0-based; a width known only at run time
 int                                                   column_index(std::string_view col);  // throws if absent
 int                                                   column_count() const;
 std::string                                           column_name(int i) const;
 ```
 
-Each of `get` / `get_row` / `get_all` / `get_by_name` routes through `column<T>`, so every
+Each of `get` / `get_row` / `get_all` / `get_by_name` / `get_at` routes through `column<T>`, so every
 type in the table above works in all of them (e.g. `get_all<int, std::string>()`).
 
 ---

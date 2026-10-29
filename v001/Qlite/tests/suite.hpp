@@ -67,6 +67,9 @@ void run(D& db, const Dialect& d) {
     check(sel.step(), d.name + ": second row");
     sel.get(id, name, price, note);
     check(id == 2 && name == "plain" && price == 0.1 && note == "a note", d.name + ": 0.1 exactly, a note");
+    check(sel.template get_at<std::optional<std::string>>(3) == "a note" &&
+              sel.template get_at<std::int64_t>(0) == 2 && sel.template get_at<std::string>(1) == "plain",
+          d.name + ": get_at reads a column by its index");
     check(!sel.step(), d.name + ": two rows");
 
     auto b = db.prepare(std::format("SELECT data FROM items WHERE id = {}", p(1)));

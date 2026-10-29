@@ -8,7 +8,7 @@ symbols: `Sqlite` (with `Statement`, `Transaction`, `prepare`/`prepare_cached`, 
 helpers), `SqliteError`, `bind_value`, `column`, `version`.
 
 `version()` returns `"major.minor"`: major = the `v001` API line, minor = revision (bump on
-each small code change; breaking changes move major). Current: **`v001.010`**.
+each small code change; breaking changes move major). Current: **`v001.011`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v001` ↔ `jac313::Qlite::v001`.
 
@@ -88,7 +88,7 @@ optional C++23 module both paste the *same* body; they differ only in how `std` 
 |---|---------|-----|-----|
 | 1 | **RAII transaction guard** | `auto tx = db.transaction(); … tx.commit();` else auto-rollback on scope exit | [transactions.md](../docs/qlite/transactions.md) |
 | 2 | **Prepared-statement cache** | `db.prepare_cached(sql) -> Statement&` (reusable, cached) | [persistence.md](../docs/qlite/persistence.md) |
-| 3 | **Ergonomics** | `string_view` / `std::span<const std::byte>` (blob) binds; `column_index` / `get_by_name` / `column_count` / `column_name`; `bind_param(":name", v)`; `get_all<Ts...>()` | [binding.md](../docs/qlite/binding.md) |
+| 3 | **Ergonomics** | `string_view` / `std::span<const std::byte>` (blob) binds; `column_index` / `get_by_name` / `get_at` / `column_count` / `column_name`; `bind_param(":name", v)`; `get_all<Ts...>()` | [binding.md](../docs/qlite/binding.md) |
 | 4 | **`std::expected` path** | `try_exec` / `try_step` (guarded by `__cpp_lib_expected`), alongside the throwing API | [errors.md](../docs/qlite/errors.md) |
 
 All four are **additive**. The frozen surface the jac313 Store SQL sink depends on
