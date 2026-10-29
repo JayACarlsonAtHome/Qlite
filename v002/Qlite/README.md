@@ -6,7 +6,7 @@ The **C++26** wrapper component of the [v002 world](../README.md).
 `jacQlite` / `jac::qlite` header-only wrapper, built on **real C++26** (a `contracts`
 pre/post/assert shim, etc. — see [Cpp26_Adoption.md](../docs/Cpp26_Adoption.md)). It
 depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Transaction`,
-`prepare`/`prepare_cached`, `get_one_*` helpers), `SqliteError`, `bind_value`, `column`,
+`prepare`/`prepare_cached`, `get_top_one_*` helpers), `SqliteError`, `bind_value`, `column`,
 `version`.
 
 `version()` returns `"major.minor"`: major = the `v002` API line, minor = revision (bump on
@@ -21,7 +21,7 @@ Qlite is SQL made light: the same API over **SQLite** (`Sqlite.hpp`), **PostgreS
 the same members — `exec`, `begin`/`commit`/`rollback`, `changes()`, `prepare` /
 `prepare_cached` giving a `Statement` with variadic `bind(...)`, `step()` and `get(...)`,
 `Transaction` — described by the `Qlite::v002::Database` concept (`Database.hpp`), so code written
-against the concept works with any of them; the `get_one_*` helpers do. Errors derive from
+against the concept works with any of them; the `get_top_one_*` helpers do. Errors derive from
 `Qlite::v002::Error` (`SqliteError`, `PostgresError` with its SQLSTATE, `MariaDBError` with
 its error number). A `std::optional<T>` binds and reads NULL.
 
@@ -39,7 +39,7 @@ pg.exec("INSERT INTO events VALUES ($1, $2)", 1, std::string("hello"));
 #include <Qlite/v002/MariaDB.hpp>
 
 Qlite::v002::MariaDB maria("app");          // the local server, as the current login
-auto n = Qlite::v002::get_one_long(maria, "SELECT COUNT(*) FROM events WHERE id = ?", 1);
+auto n = Qlite::v002::get_top_one_long(maria, "SELECT COUNT(*) FROM events WHERE id = ?", 1);
 ```
 
 Include only the databases a project uses (and link libpq / libmariadb for them);

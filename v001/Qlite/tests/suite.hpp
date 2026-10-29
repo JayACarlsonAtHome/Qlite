@@ -35,10 +35,12 @@ struct Dialect {
 
 template<Qlite::v001::Database D>
 void run(D& db, const Dialect& d) {
-    using Qlite::v001::get_one_double;
-    using Qlite::v001::get_one_long;
-    using Qlite::v001::get_one_long_or;
-    using Qlite::v001::get_one_string;
+    using Qlite::v001::get_top_one_bool;
+    using Qlite::v001::get_top_one_bool_or;
+    using Qlite::v001::get_top_one_double;
+    using Qlite::v001::get_top_one_long;
+    using Qlite::v001::get_top_one_long_or;
+    using Qlite::v001::get_top_one_string;
     const auto p = d.placeholder;
     db.exec(d.create);
 
@@ -84,15 +86,38 @@ void run(D& db, const Dialect& d) {
     db.exec(std::format("UPDATE items SET name = {} WHERE id = {}", p(1), p(2)), std::string("plain"), std::int64_t{2});
     check(db.changes() == 1, d.name + ": an UPDATE to the same value counts its row");
 
-    check(get_one_long(db, "SELECT COUNT(*) FROM items") == 2, d.name + ": get_one_long");
-    check(get_one_string(db, std::format("SELECT name FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{1}) == odd,
-          d.name + ": get_one_string with a bound value");
-    check(get_one_double(db, std::format("SELECT price FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{2}) == 0.1,
-          d.name + ": get_one_double");
-    check(get_one_long_or(db, std::format("SELECT id FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{-1}, std::int64_t{99}) == -1,
-          d.name + ": get_one_long_or's default when there is no row");
+    check(get_top_one_long(db, "SELECT COUNT(*) FROM items") == 2, d.name + ": get_top_one_long");
+    check(get_top_one_string(db, std::format("SELECT name FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{1}) == odd,
+          d.name + ": get_top_one_string with a bound value");
+    check(get_top_one_double(db, std::format("SELECT price FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{2}) == 0.1,
+          d.name + ": get_top_one_double");
+    check(get_top_one_long_or(db, std::format("SELECT id FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{-1}, std::int64_t{99}) == -1,
+          d.name + ": get_top_one_long_or's default when there is no row");
 
-    const auto count = [&] { return get_one_long(db, "SELECT COUNT(*) FROM items"); };
+    check(get_top_one_bool(db, "SELECT 1 = 1") && !get_top_one_bool(db, "SELECT 1 = 0"), d.name + ": get_top_one_bool of a comparison");
+    check(get_top_one_bool(db, std::format("SELECT COUNT(*) > 1 FROM items WHERE id <= {}", p(1)).c_str(), std::int64_t{2}),
+          d.name + ": get_top_one_bool with a bound value");
+    check(get_top_one_bool(db, "SELECT 'yes'") && !get_top_one_bool(db, "SELECT 'no'") && !get_top_one_bool(db, "SELECT NULL"),
+          d.name + ": get_top_one_bool of text and NULL");
+    check(!get_top_one_bool(db, std::format("SELECT 1 FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{99}),
+          d.name + ": get_top_one_bool with no row is false");
+    check(get_top_one_bool_or(db, std::format("SELECT 0 FROM items WHERE id = {}", p(1)).c_str(), true, std::int64_t{99}),
+          d.name + ": get_top_one_bool_or's default when there is no row");
+    check(get_top_one_bool(db, "SELECT 1 = 1", false), d.name + ": get_top_one_bool with debug off");
+    check(get_top_one_long(db, "SELECT id FROM items ORDER BY id DESC") == 2 &&
+          get_top_one_long(db, "SELECT id FROM items ORDER BY id") == 1, d.name + ": the top row of many, by ORDER BY");
+    using Qlite::v001::get_top_one;
+    using Qlite::v001::get_top_one_or;
+    check(get_top_one<std::string>(db, std::format("SELECT name FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{2}) == "plain",
+          d.name + ": get_top_one<std::string>");
+    check(!get_top_one<std::optional<std::int64_t>>(db, std::format("SELECT id FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{99}),
+          d.name + ": get_top_one<optional> with no row is nullopt (not an id)");
+    check(get_top_one<std::optional<std::int64_t>>(db, "SELECT id FROM items ORDER BY id") == 1, d.name + ": get_top_one<optional> of a row");
+    check(!get_top_one<std::optional<std::string>>(db, "SELECT note FROM items ORDER BY id"), d.name + ": get_top_one<optional> of NULL");
+    check(get_top_one_or<double>(db, std::format("SELECT price FROM items WHERE id = {}", p(1)).c_str(), 7.5, std::int64_t{99}) == 7.5,
+          d.name + ": get_top_one_or<double>'s default");
+
+    const auto count = [&] { return get_top_one_long(db, "SELECT COUNT(*) FROM items"); };
     {
         auto t = db.transaction();
         db.exec(insert, std::int64_t{3}, std::string("rolled back"), 1.0, std::optional<std::string>{},

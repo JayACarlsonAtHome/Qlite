@@ -99,16 +99,37 @@ type in the table above works in all of them (e.g. `get_all<int, std::string>()`
 
 ---
 
-## Scalar `get_one_*` helpers
+## Top-one helpers: `get_top_one<T>`
 
-Additive helpers in `Sqlite.body.hpp` for single-value queries (not part of the frozen
-Store SQL surface):
+One value from a query: column 0 of the **top row**, the first of however many rows the SQL
+returns, in its `ORDER BY`. The SQL can be anything (`WHERE`, `ORDER BY`, joins); values bind
+into its placeholders. In `Database.body.hpp`, so they work on SQLite, PostgreSQL and MariaDB.
+
+```cpp
+auto n     = get_top_one<std::int64_t>(db, "SELECT COUNT(*) FROM items WHERE kind = ?", "tool");
+auto ok    = get_top_one_bool(db, "SELECT observe FROM contract_modes WHERE os = ? AND toolchain = ?",
+                              false, "fedora", "gcc16");          // false: debug off
+auto newest = get_top_one_long(db, "SELECT run_id FROM run ORDER BY ts_utc DESC");
+auto id    = get_top_one<std::optional<std::int64_t>>(db, "SELECT id FROM items WHERE name = ?", "drill");
+if (!id) { /* no such item: nullopt, never mistaken for an id */ }
+```
 
 | Helper | Behaviour |
 |--------|-----------|
-| `get_one_long` / `get_one_string` / `get_one_double` | Variadic binds; no row → type default (0 / `""` / 0.0) |
-| `get_one_long_or` / `get_one_string_or` | Explicit default when no row matches |
-| `get_one_*_debug` or `debug=true` overload | Logs SQL and result to **stderr via `fprintf`** (not `std::cerr`) |
+| `get_top_one<T>(db, sql, [debug,] args...)` | T: `std::int64_t`, `int`, `double`, `bool`, `std::string`, or `std::optional` of one. No row → `T{}` (an optional: `nullopt`, also for NULL) |
+| `get_top_one_or<T>(db, sql, [debug,] deflt, args...)` | `deflt` when there is no row |
+| `get_top_one_debug<T>` / `get_top_one_or_debug<T>` | debug always on |
+| `get_top_one_long` / `_string` / `_double` / `_bool` (and `_or`, `_debug`, `_or_debug`) | the common types by name |
+| `debug = true` | the SQL and the result go to **stderr via `fprintf`** (`[SQL] ...`, `[SQL] -> 42`) |
+
+A bool reads 1/0, t/f and true/false/yes/no (`text_is_true`); NULL is false. A `bool` right
+after the SQL is always `debug`: to bind a bool first, pass `debug` before it. SQL/prepare errors
+propagate — a malformed query must not read as a clean "no row".
+
+--------|-----------|
+| `get_top_one_long` / `get_top_one_string` / `get_top_one_double` | Variadic binds; no row → type default (0 / `""` / 0.0) |
+| `get_top_one_long_or` / `get_top_one_string_or` | Explicit default when no row matches |
+| `get_top_one_*_debug` or `debug=true` overload | Logs SQL and result to **stderr via `fprintf`** (not `std::cerr`) |
 
 SQL/prepare errors propagate — a malformed query must not silently read as a clean zero.
 
