@@ -18,6 +18,9 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <source_location>
+#include <string_view>
+#include <cstdlib>
 
 static_assert(Qlite::v001::version() == "v001.009", "v001 version");
 
@@ -28,14 +31,12 @@ namespace {
 
 int failures = 0;
 
-#define CHECK(cond)                                                            \
-    do {                                                                       \
-        if (!(cond)) {                                                         \
-            std::cerr << "FAIL: " #cond " at " << __FILE__ << ":" << __LINE__  \
-                      << "\n";                                                  \
-            ++failures;                                                        \
-        }                                                                      \
-    } while (0)
+// A failed check says what and where, and counts toward failures.
+void check(bool ok, std::string_view what, std::source_location at = std::source_location::current()) {
+    if (ok) return;
+    std::cerr << "FAIL: " << what << " at " << at.file_name() << ":" << at.line() << "\n";
+    ++failures;
+}
 
 // ---------------------------------------------------------------------------
 // Part 1 — frozen surface
@@ -47,15 +48,15 @@ void test_exec_bind_get() {
     db.exec("INSERT INTO t (name, score) VALUES (?, ?)", std::string("qlite"), 3.5);
 
     auto stmt = db.prepare("SELECT id, name, score FROM t");
-    CHECK(stmt.step());
+    check(stmt.step(), "stmt.step()");
     std::int64_t id = 0;
     std::string name;
     double score = 0.0;
     stmt.get(id, name, score);
-    CHECK(id == 1);
-    CHECK(name == "qlite");
-    CHECK(score == 3.5);
-    CHECK(!stmt.step());
+    check(id == 1, "id == 1");
+    check(name == "qlite", "name == \"qlite\"");
+    check(score == 3.5, "score == 3.5");
+    check(!stmt.step(), "!stmt.step()");
 }
 
 void test_prepared_reuse_and_rows() {
@@ -64,7 +65,7 @@ void test_prepared_reuse_and_rows() {
     auto ins = db.prepare("INSERT INTO t (n) VALUES (?)");
     for (std::int64_t i = 1; i <= 5; ++i) {
         ins.bind(i);
-        CHECK(!ins.step());
+        check(!ins.step(), "!ins.step()");
     }
 
     auto sel = db.prepare("SELECT n FROM t ORDER BY n");
@@ -74,8 +75,8 @@ void test_prepared_reuse_and_rows() {
         sum += n;
         ++rows;
     }
-    CHECK(rows == 5);
-    CHECK(sum == 15);
+    check(rows == 5, "rows == 5");
+    check(sum == 15, "sum == 15");
 }
 
 void test_indexed_runtime_binds() {
@@ -92,12 +93,12 @@ void test_indexed_runtime_binds() {
     while (ins.step()) {}
 
     auto sel = db.prepare("SELECT a, b, c FROM m");
-    CHECK(sel.step());
+    check(sel.step(), "sel.step()");
     std::int64_t a = 0; double b = 0; std::string c;
     sel.get(a, b, c);
-    CHECK(a == 7);
-    CHECK(b == 2.5);
-    CHECK(c == "metric");
+    check(a == 7, "a == 7");
+    check(b == 2.5, "b == 2.5");
+    check(c == "metric", "c == \"metric\"");
 }
 
 void test_optional_null() {
@@ -107,15 +108,15 @@ void test_optional_null() {
     db.exec("INSERT INTO t VALUES (?, ?)", 2, std::optional<std::string>{"set"});
 
     auto stmt = db.prepare("SELECT label FROM t ORDER BY id");
-    CHECK(stmt.step());
+    check(stmt.step(), "stmt.step()");
     std::optional<std::string> a;
     stmt.get(a);
-    CHECK(!a.has_value());
-    CHECK(stmt.step());
+    check(!a.has_value(), "!a.has_value()");
+    check(stmt.step(), "stmt.step()");
     std::optional<std::string> b;
     stmt.get(b);
-    CHECK(b.has_value());
-    CHECK(*b == "set");
+    check(b.has_value(), "b.has_value()");
+    check(*b == "set", "*b == \"set\"");
 }
 
 void test_transaction_commit_and_rollback() {
@@ -131,10 +132,10 @@ void test_transaction_commit_and_rollback() {
     db.rollback();
 
     auto stmt = db.prepare("SELECT COUNT(*) FROM t");
-    CHECK(stmt.step());
+    check(stmt.step(), "stmt.step()");
     std::int64_t count = 0;
     stmt.get(count);
-    CHECK(count == 1);
+    check(count == 1, "count == 1");
 }
 
 void test_error_on_bad_sql() {
@@ -144,9 +145,9 @@ void test_error_on_bad_sql() {
         db.exec("THIS IS NOT VALID SQL");
     } catch (const SqliteError& e) {
         threw = true;
-        CHECK(e.code() != 0 || std::string(e.what()).find("exec failed") != std::string::npos);
+        check(e.code() != 0 || std::string(e.what()).find("exec failed") != std::string::npos, "e.code() != 0 || std::string(e.what()).find(\"exec failed\") != std::string::npos");
     }
-    CHECK(threw);
+    check(threw, "threw");
 }
 
 // ---------------------------------------------------------------------------
@@ -167,7 +168,7 @@ void test_transaction_guard_autorollback() {
     {
         auto tx = db.transaction();
         db.exec("INSERT INTO t (n) VALUES (20)");
-        CHECK(tx.active());
+        check(tx.active(), "tx.active()");
         // no commit -> dtor rolls back
     }
     // Exception path: guard rolls back as the stack unwinds.
@@ -179,10 +180,10 @@ void test_transaction_guard_autorollback() {
     }
 
     auto stmt = db.prepare("SELECT COUNT(*) FROM t");
-    CHECK(stmt.step());
+    check(stmt.step(), "stmt.step()");
     std::int64_t count = 0;
     stmt.get(count);
-    CHECK(count == 1);   // only the committed row (10) survives
+    check(count == 1, "count == 1");   // only the committed row (10) survives
 }
 
 void test_prepared_statement_cache() {
@@ -196,13 +197,13 @@ void test_prepared_statement_cache() {
         while (st.step()) {}
     }
     // Same SQL string returns the same cached statement instance.
-    CHECK(&db.prepare_cached(sql) == &db.prepare_cached(sql));
+    check(&db.prepare_cached(sql) == &db.prepare_cached(sql), "&db.prepare_cached(sql) == &db.prepare_cached(sql)");
 
     auto sel = db.prepare("SELECT SUM(n) FROM t");
-    CHECK(sel.step());
+    check(sel.step(), "sel.step()");
     std::int64_t sum = 0;
     sel.get(sum);
-    CHECK(sum == 6);
+    check(sum == 6, "sum == 6");
 }
 
 void test_string_view_and_named_params() {
@@ -219,9 +220,9 @@ void test_string_view_and_named_params() {
 
     auto sel = db.prepare("SELECT id, name FROM t ORDER BY id");
     auto rows = sel.get_all<std::int64_t, std::string>();
-    CHECK(rows.size() == 2);
-    CHECK(std::get<1>(rows[0]) == "view-bound");
-    CHECK(std::get<1>(rows[1]) == "named");
+    check(rows.size() == 2, "rows.size() == 2");
+    check(std::get<1>(rows[0]) == "view-bound", "std::get<1>(rows[0]) == \"view-bound\"");
+    check(std::get<1>(rows[1]) == "named", "std::get<1>(rows[1]) == \"named\"");
 }
 
 void test_column_by_name() {
@@ -230,13 +231,13 @@ void test_column_by_name() {
     db.exec("INSERT INTO t VALUES (?, ?, ?)", 1, std::string("byname"), 9.5);
 
     auto stmt = db.prepare("SELECT id, name, score FROM t");
-    CHECK(stmt.step());
-    CHECK(stmt.column_count() == 3);
-    CHECK(stmt.column_name(1) == "name");
-    CHECK(stmt.column_index("score") == 2);
-    CHECK(stmt.get_by_name<std::int64_t>("id") == 1);
-    CHECK(stmt.get_by_name<std::string>("name") == "byname");
-    CHECK(stmt.get_by_name<double>("score") == 9.5);
+    check(stmt.step(), "stmt.step()");
+    check(stmt.column_count() == 3, "stmt.column_count() == 3");
+    check(stmt.column_name(1) == "name", "stmt.column_name(1) == \"name\"");
+    check(stmt.column_index("score") == 2, "stmt.column_index(\"score\") == 2");
+    check(stmt.get_by_name<std::int64_t>("id") == 1, "stmt.get_by_name<std::int64_t>(\"id\") == 1");
+    check(stmt.get_by_name<std::string>("name") == "byname", "stmt.get_by_name<std::string>(\"name\") == \"byname\"");
+    check(stmt.get_by_name<double>("score") == 9.5, "stmt.get_by_name<double>(\"score\") == 9.5");
 }
 
 void test_blob_roundtrip() {
@@ -250,25 +251,25 @@ void test_blob_roundtrip() {
     while (ins.step()) {}
 
     auto sel = db.prepare("SELECT data FROM b");
-    CHECK(sel.step());
+    check(sel.step(), "sel.step()");
     auto got = sel.get_row<std::vector<std::byte>>();
-    CHECK(std::get<0>(got) == payload);
+    check(std::get<0>(got) == payload, "std::get<0>(got) == payload");
 }
 
 void test_expected_path() {
 #if defined(__cpp_lib_expected)
     Sqlite db(":memory:");
     auto ok = db.try_exec("CREATE TABLE t (n INTEGER)");
-    CHECK(ok.has_value());
+    check(ok.has_value(), "ok.has_value()");
     auto bad = db.try_exec("NOPE NOT SQL");
-    CHECK(!bad.has_value());
-    CHECK(std::string(bad.error().what()).find("exec failed") != std::string::npos);
+    check(!bad.has_value(), "!bad.has_value()");
+    check(std::string(bad.error().what()).find("exec failed") != std::string::npos, "std::string(bad.error().what()).find(\"exec failed\") != std::string::npos");
 
     db.exec("INSERT INTO t VALUES (1)");
     auto sel = db.prepare("SELECT n FROM t");
     auto r = sel.try_step();
-    CHECK(r.has_value());
-    CHECK(*r == true);
+    check(r.has_value(), "r.has_value()");
+    check(*r == true, "*r == true");
 #else
     std::cout << "  (std::expected unavailable — try_* path skipped)\n";
 #endif
@@ -284,21 +285,21 @@ void test_column_int() {
     db.exec("INSERT INTO t VALUES (?)", std::int64_t{7});
 
     auto stmt = db.prepare("SELECT n FROM t ORDER BY n");
-    CHECK(stmt.step());
+    check(stmt.step(), "stmt.step()");
     int first = 0;
     stmt.get(first);                        // get(int&) -> column<int>
-    CHECK(first == -3);
-    CHECK(stmt.get_by_name<int>("n") == -3); // get_by_name<int> -> column<int>
-    CHECK(stmt.step());
+    check(first == -3, "first == -3");
+    check(stmt.get_by_name<int>("n") == -3, "stmt.get_by_name<int>(\"n\") == -3"); // get_by_name<int> -> column<int>
+    check(stmt.step(), "stmt.step()");
     int second = 0;
     stmt.get(second);
-    CHECK(second == 7);
-    CHECK(!stmt.step());
+    check(second == 7, "second == 7");
+    check(!stmt.step(), "!stmt.step()");
 
     auto all = db.prepare("SELECT n FROM t ORDER BY n").get_all<int>();  // get_all<int>
-    CHECK(all.size() == 2);
-    CHECK(std::get<0>(all[0]) == -3);
-    CHECK(std::get<0>(all[1]) == 7);
+    check(all.size() == 2, "all.size() == 2");
+    check(std::get<0>(all[0]) == -3, "std::get<0>(all[0]) == -3");
+    check(std::get<0>(all[1]) == 7, "std::get<0>(all[1]) == 7");
 }
 
 } // namespace
