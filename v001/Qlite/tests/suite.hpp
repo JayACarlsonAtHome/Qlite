@@ -146,6 +146,10 @@ void run(D& db, const Dialect& d) {
               get_top_one_id(db, std::format("SELECT id FROM top_one WHERE s = {}", p(1)).c_str(), std::string("absent")) == 0 &&
               get_top_one_id(db, n.c_str(), NUL) == 0 && get_top_one_id(db, "SELECT id FROM top_one ORDER BY id DESC") == 3,
               d.name + ": top-one id: found 1, none 0, NULL 0, the top of many 3");
+        check(get_top_one_id_or(db, std::format("SELECT id FROM top_one WHERE s = {}", p(1)).c_str(), std::int64_t{-1}, std::string("absent")) == -1 &&
+              get_top_one_id_or(db, n.c_str(), std::int64_t{-1}, NUL) == -1 && get_top_one_id_or(db, n.c_str(), std::int64_t{-1}, ZERO) == 0 &&
+              get_top_one_id_or(db, n.c_str(), false, std::int64_t{-1}, VAL) == 42,
+              d.name + ": top-one id_or: none -1, NULL -1, a real 0 stays 0, with debug off");
         check(get_top_one<int>(db, n.c_str(), VAL) == 42 && get_top_one<int>(db, n.c_str(), NUL) == 0, d.name + ": top-one int");
         check(get_top_one_double(db, x.c_str(), VAL) == 2.5 && get_top_one_double(db, x.c_str(), ZERO) == 0.0 &&
               get_top_one_double(db, x.c_str(), NUL) == 0.0 && get_top_one_double(db, x.c_str(), NONE) == 0.0, d.name + ": top-one double: 2.5, 0, NULL 0, no row 0");
