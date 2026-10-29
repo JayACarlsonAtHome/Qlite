@@ -120,6 +120,7 @@ if (!id) { /* no such item: nullopt, never mistaken for an id */ }
 | `get_top_one_or<T>(db, sql, [debug,] deflt, args...)` | `deflt` when there is no row |
 | `get_top_one_debug<T>` / `get_top_one_or_debug<T>` | debug always on |
 | `get_top_one_long` / `_string` / `_double` / `_bool` (and `_or`, `_debug`, `_or_debug`) | the common types by name |
+| `get_top_one_id(db, sql, [debug,] args...)` (and `_debug`) | an id: **0 means found none** (no row, or NULL); ids start at 1. Where 0 can be a real id, use `get_top_one<std::optional<std::int64_t>>` |
 | `debug = true` | the SQL and the result go to **stderr via `fprintf`** (`[SQL] ...`, `[SQL] -> 42`) |
 
 A bool reads 1/0, t/f and true/false/yes/no (`text_is_true`); NULL is false. A `bool` right

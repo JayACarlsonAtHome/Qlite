@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <cstdio>
+#include <unistd.h>   // dup / dup2: the debug check reads stderr
 #include <Qlite/v002/Database.hpp>
 
 #include <cstddef>
@@ -118,6 +120,89 @@ void run(D& db, const Dialect& d) {
           d.name + ": a text default is the default, not debug");
     check(get_top_one_or<double>(db, std::format("SELECT price FROM items WHERE id = {}", p(1)).c_str(), 7.5, std::int64_t{99}) == 7.5,
           d.name + ": get_top_one_or<double>'s default");
+
+    // ---- get_top_one: every type x a value, a zero / empty value, NULL and no row ----
+    {
+        using namespace Qlite::v002;
+        db.exec("DROP TABLE IF EXISTS top_one");
+        db.exec("CREATE TABLE top_one (id INTEGER PRIMARY KEY, n BIGINT, x DOUBLE PRECISION, b BOOLEAN, s VARCHAR(40))");
+        db.exec(std::format("INSERT INTO top_one (id, n, x, b, s) VALUES ({}, {}, {}, {}, {})", p(1), p(2), p(3), p(4), p(5)),
+                std::int64_t{1}, std::int64_t{42}, 2.5, 1, std::string("forty-two"));                 // a value
+        db.exec(std::format("INSERT INTO top_one (id, n, x, b, s) VALUES ({}, {}, {}, {}, {})", p(1), p(2), p(3), p(4), p(5)),
+                std::int64_t{2}, std::int64_t{0}, 0.0, 0, std::string());                             // zero / empty
+        db.exec(std::format("INSERT INTO top_one (id) VALUES ({})", p(1)), std::int64_t{3});           // all NULL
+        const auto q = [&](const char* col) { return std::format("SELECT {} FROM top_one WHERE id = {}", col, p(1)); };
+        const std::string n = q("n"), x = q("x"), b = q("b"), s = q("s");
+        const std::int64_t VAL = 1, ZERO = 2, NUL = 3, NONE = 99;
+        using I = std::optional<std::int64_t>;
+        using X = std::optional<double>;
+        using Bo = std::optional<bool>;
+        using S = std::optional<std::string>;
+
+        // plain T: the value; NULL and no row both read as the type's empty value
+        check(get_top_one_long(db, n.c_str(), VAL) == 42 && get_top_one_long(db, n.c_str(), ZERO) == 0 &&
+              get_top_one_long(db, n.c_str(), NUL) == 0 && get_top_one_long(db, n.c_str(), NONE) == 0, d.name + ": top-one long: 42, 0, NULL 0, no row 0");
+        check(get_top_one_id(db, std::format("SELECT id FROM top_one WHERE s = {}", p(1)).c_str(), std::string("forty-two")) == 1 &&
+              get_top_one_id(db, std::format("SELECT id FROM top_one WHERE s = {}", p(1)).c_str(), std::string("absent")) == 0 &&
+              get_top_one_id(db, n.c_str(), NUL) == 0 && get_top_one_id(db, "SELECT id FROM top_one ORDER BY id DESC") == 3,
+              d.name + ": top-one id: found 1, none 0, NULL 0, the top of many 3");
+        check(get_top_one<int>(db, n.c_str(), VAL) == 42 && get_top_one<int>(db, n.c_str(), NUL) == 0, d.name + ": top-one int");
+        check(get_top_one_double(db, x.c_str(), VAL) == 2.5 && get_top_one_double(db, x.c_str(), ZERO) == 0.0 &&
+              get_top_one_double(db, x.c_str(), NUL) == 0.0 && get_top_one_double(db, x.c_str(), NONE) == 0.0, d.name + ": top-one double: 2.5, 0, NULL 0, no row 0");
+        check(get_top_one_bool(db, b.c_str(), VAL) && !get_top_one_bool(db, b.c_str(), ZERO) &&
+              !get_top_one_bool(db, b.c_str(), NUL) && !get_top_one_bool(db, b.c_str(), NONE), d.name + ": top-one bool: true, false, NULL false, no row false");
+        check(get_top_one_string(db, s.c_str(), VAL) == "forty-two" && get_top_one_string(db, s.c_str(), ZERO).empty() &&
+              get_top_one_string(db, s.c_str(), NUL).empty() && get_top_one_string(db, s.c_str(), NONE).empty(), d.name + ": top-one string: value, \"\", NULL \"\", no row \"\"");
+
+        // optional<T>: a value (also 0, false, "") has a value; NULL and no row are nullopt
+        check(get_top_one<I>(db, n.c_str(), VAL) == 42 && get_top_one<I>(db, n.c_str(), ZERO) == 0 &&
+              !get_top_one<I>(db, n.c_str(), NUL) && !get_top_one<I>(db, n.c_str(), NONE), d.name + ": top-one optional<int64>: 42, 0, NULL none, no row none");
+        check(get_top_one<X>(db, x.c_str(), VAL) == 2.5 && get_top_one<X>(db, x.c_str(), ZERO) == 0.0 &&
+              !get_top_one<X>(db, x.c_str(), NUL) && !get_top_one<X>(db, x.c_str(), NONE), d.name + ": top-one optional<double>");
+        check(get_top_one<Bo>(db, b.c_str(), VAL) == true && get_top_one<Bo>(db, b.c_str(), ZERO) == false &&
+              !get_top_one<Bo>(db, b.c_str(), NUL) && !get_top_one<Bo>(db, b.c_str(), NONE), d.name + ": top-one optional<bool>: NULL is none, not false");
+        check(get_top_one<S>(db, s.c_str(), VAL) == "forty-two" && get_top_one<S>(db, s.c_str(), ZERO) == std::string() &&
+              !get_top_one<S>(db, s.c_str(), NUL) && !get_top_one<S>(db, s.c_str(), NONE), d.name + ": top-one optional<string>: \"\" is a value, NULL none");
+
+        // _or: the default is for no row only; a NULL row reads as above
+        check(get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, VAL) == 42 && get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, NUL) == 0 &&
+              get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, NONE) == -7, d.name + ": top-one long_or");
+        check(get_top_one_or<double>(db, x.c_str(), 7.5, NUL) == 0.0 && get_top_one_or<double>(db, x.c_str(), 7.5, NONE) == 7.5, d.name + ": top-one or<double>");
+        check(!get_top_one_bool_or(db, b.c_str(), true, NUL) && get_top_one_bool_or(db, b.c_str(), true, NONE), d.name + ": top-one bool_or");
+        check(get_top_one_string_or(db, s.c_str(), "none", ZERO).empty() && get_top_one_string_or(db, s.c_str(), "none", NONE) == "none",
+              d.name + ": top-one string_or (a text default, not debug)");
+        check(get_top_one_or<I>(db, n.c_str(), I{5}, NUL) == std::nullopt && get_top_one_or<I>(db, n.c_str(), I{5}, NONE) == 5,
+              d.name + ": top-one or<optional>: NULL none, no row the default");
+
+        // debug: the SQL and the result go to stderr, and the result is unchanged
+        const auto stderr_of = [](auto fn) {
+            std::fflush(stderr);
+            const int saved = ::dup(2);
+            std::FILE* tmp = std::tmpfile();
+            ::dup2(::fileno(tmp), 2);
+            fn();
+            std::fflush(stderr);
+            ::dup2(saved, 2);
+            ::close(saved);
+            std::rewind(tmp);
+            std::string out;
+            for (int c; (c = std::fgetc(tmp)) != EOF;) out += static_cast<char>(c);
+            std::fclose(tmp);
+            return out;
+        };
+        std::int64_t got = 0;
+        std::string log = stderr_of([&] { got = get_top_one_long(db, n.c_str(), true, VAL); });
+        check(got == 42 && log.find("[SQL] SELECT n FROM top_one") != std::string::npos && log.find("[SQL] -> 42") != std::string::npos,
+              d.name + ": debug prints the SQL and 42");
+        log = stderr_of([&] { (void)get_top_one<I>(db, n.c_str(), true, NUL); });
+        check(log.find("[SQL] -> NULL") != std::string::npos, d.name + ": debug prints NULL");
+        log = stderr_of([&] { (void)get_top_one_string(db, s.c_str(), true, NONE); });
+        check(log.find("(no row)") != std::string::npos, d.name + ": debug prints no row");
+        log = stderr_of([&] { (void)get_top_one_bool_debug(db, b.c_str(), VAL); });
+        check(log.find("[SQL] -> true") != std::string::npos, d.name + ": _debug prints true");
+        log = stderr_of([&] { (void)get_top_one_string(db, s.c_str(), false, VAL); });
+        check(log.empty(), d.name + ": debug off prints nothing");
+    }
 
     const auto count = [&] { return get_top_one_long(db, "SELECT COUNT(*) FROM items"); };
     {
