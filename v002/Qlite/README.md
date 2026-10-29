@@ -2,7 +2,7 @@
 
 The **C++26** wrapper component of the [v002 world](../README.md).
 
-`Qlite::v002` is a **header-only** SQLite3 wrapper — the canonical evolution of the legacy
+`Qlite::v002` is a **header-only** SQL wrapper (SQLite, PostgreSQL, MariaDB) — the canonical evolution of the legacy
 `jacQlite` / `jac::qlite` header-only wrapper, built on **real C++26** (a `contracts`
 pre/post/assert shim, etc. — see [Cpp26_Adoption.md](../docs/Cpp26_Adoption.md)). It
 depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Transaction`,
@@ -10,9 +10,42 @@ depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Tra
 `version`.
 
 `version()` returns `"major.minor"`: major = the `v002` API line, minor = revision (bump on
-each small code change; breaking changes move major). Current: **`v002.008`**.
+each small code change; breaking changes move major). Current: **`v002.010`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v002` ↔ `jac313::Qlite::v002`.
+
+## One API over three databases
+
+Qlite is SQL made light: the same API over **SQLite** (`Sqlite.hpp`), **PostgreSQL**
+(`Postgres.hpp`, libpq) and **MariaDB / MySQL** (`MariaDB.hpp`, Connector/C). Each class has
+the same members — `exec`, `begin`/`commit`/`rollback`, `changes()`, `prepare` /
+`prepare_cached` giving a `Statement` with variadic `bind(...)`, `step()` and `get(...)`,
+`Transaction` — described by the `Qlite::v002::Database` concept (`Database.hpp`), so code written
+against the concept works with any of them; the `get_one_*` helpers do. Errors derive from
+`Qlite::v002::Error` (`SqliteError`, `PostgresError` with its SQLSTATE, `MariaDBError` with
+its error number). A `std::optional<T>` binds and reads NULL.
+
+Values are always bound parameters, never pasted into SQL. Each database keeps its own
+placeholders, so no SQL is rewritten: `?` for SQLite and MariaDB, `$1`, `$2`, ... for
+PostgreSQL (a parameter's type comes from where it is used; cast where it cannot be told:
+`$1::int`).
+
+```cpp
+#include <Qlite/v002/Postgres.hpp>
+
+Qlite::v002::Postgres pg("host=/var/run/postgresql dbname=app");   // "" : the PG* environment
+pg.exec("INSERT INTO events VALUES ($1, $2)", 1, std::string("hello"));
+
+#include <Qlite/v002/MariaDB.hpp>
+
+Qlite::v002::MariaDB maria("app");          // the local server, as the current login
+auto n = Qlite::v002::get_one_long(maria, "SELECT COUNT(*) FROM events WHERE id = ?", 1);
+```
+
+Include only the databases a project uses (and link libpq / libmariadb for them);
+`<Qlite/v002.hpp>` brings in SQLite. One test suite (`tests/suite.hpp`) runs on all three;
+PostgreSQL and MariaDB work in a throwaway schema / database (`qlite_test_<pid>`; MariaDB
+needs `` GRANT ALL ON `qlite\_test\_%`.* ``) and report skipped where no server answers.
 
 ## Quick start
 

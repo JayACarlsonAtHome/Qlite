@@ -26,6 +26,8 @@ module;
 #include <span>
 #include <unordered_map>
 #include <cstdio>
+#include <charconv>
+#include <concepts>
 #if __has_include(<expected>)
 #  include <expected>
 #endif
@@ -33,5 +35,6 @@ module;
 export module Qlite.v001;
 
 export namespace Qlite::v001 {
+#include "Qlite/v001/Database.body.hpp"
 #include "Qlite/v001/Sqlite.body.hpp"
 }

@@ -6,7 +6,8 @@
  *
  * Canonical evolution of the legacy jacQlite / jac::qlite header-only wrapper.
  * v001 is the C++23 baseline. Public symbols: Sqlite, SqliteError, bind_value,
- * column, version.
+ * column; and from Database.hpp the Database concept, Error, version and get_one_*.
+ * Postgres.hpp and MariaDB.hpp give the same API over PostgreSQL and MariaDB.
  *
  * The implementation lives in Sqlite.body.hpp (an include-free fragment). This
  * textual header makes the std + <sqlite3.h> names visible via the textual
@@ -14,6 +15,8 @@
  * (Qlite.v001.cppm) includes the SAME body, differing only in how std/sqlite3
  * are made visible. Keep declarations in the body file.
  */
+
+#include "Qlite/v001/Database.hpp"   // the concept, Error, Transaction, get_one_*
 
 #include <sqlite3.h>
 
