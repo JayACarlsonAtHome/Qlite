@@ -102,9 +102,10 @@ intact.
 
 ### C++26 contracts
 
-In v002 the wrapper's invariants are guarded by the `contracts` pre/post/assert shim
-(`QLITE_PRE` / `QLITE_POST` / `QLITE_ASSERT`, runtime checks today, migrating to native
-P2900 contracts once `__cpp_contracts` is available). See
+Misuse ends the program: reading a column with no current row (before `step()`, or after it
+returned false) or past the row, and on SQLite binding more values than placeholders or an
+index past them (`QLITE_PRE`, `include/Qlite/v002/contracts.hpp`). With GCC 16 these are native
+C++26 contracts; elsewhere runtime checks. See
 [Cpp26_Adoption.md](../docs/Cpp26_Adoption.md).
 
 ## Modules

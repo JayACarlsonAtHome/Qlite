@@ -2,6 +2,11 @@ add_executable(qlite_v001_test v001_test.cpp)
 target_link_libraries(qlite_v001_test PRIVATE Qlite::Qlite)
 add_test(NAME qlite_v001_test COMMAND qlite_v001_test)
 
+# Misusing a statement (no current row, a bind past the placeholders) terminates (contracts).
+add_executable(qlite_v001_contracts_test contracts_test.cpp)
+target_link_libraries(qlite_v001_contracts_test PRIVATE Qlite::Qlite)
+add_test(NAME qlite_v001_contracts_test COMMAND qlite_v001_contracts_test)
+
 # The one suite (suite.hpp) on every database this machine has. PostgreSQL and MariaDB
 # report skipped (exit 77) where no server answers.
 add_executable(qlite_v001_sqlite_suite sqlite_suite_test.cpp)

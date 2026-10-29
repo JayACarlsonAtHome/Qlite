@@ -22,7 +22,7 @@
 #include <string_view>
 #include <cstdlib>
 
-static_assert(Qlite::v002::version() == "v002.011", "v002 version");
+static_assert(Qlite::v002::version() == "v002.012", "v002 version");
 
 using Qlite::v002::Sqlite;
 using Qlite::v002::SqliteError;

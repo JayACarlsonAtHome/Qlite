@@ -1,8 +1,8 @@
 # Binding and extraction — v002
 
 How values go *into* statements (binds) and come back *out* (column extraction), and the
-ergonomic conveniences layered on top. v002 is the **C++26** world — the bind index ranges
-and statement state are guarded by the contracts shim (see
+ergonomic conveniences layered on top. v002 is the **C++26** world — SQLite bind counts and
+indices, and a current row for every column read, are contracts (see
 [Cpp26_Adoption.md](../Cpp26_Adoption.md)).
 
 See also: [persistence.md](persistence.md) (statements + cache) ·
@@ -122,4 +122,5 @@ SQL/prepare errors propagate — a malformed query must not silently read as a c
 Binding feeds a `Statement` (see [persistence.md](persistence.md)); extraction reads it
 back after `step()`. The non-throwing twins (`try_exec` / `try_step`) carry the same bind
 semantics but return `std::expected` instead of throwing — see [errors.md](errors.md). In
-v002 a `QLITE_PRE` checks the bind index is in range before touching SQLite.
+v002 a `QLITE_PRE` checks a SQLite bind index (and the number of values) is within the
+statement's placeholders, and every column read checks there is a current row.

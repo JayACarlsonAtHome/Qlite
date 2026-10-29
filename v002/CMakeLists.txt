@@ -19,6 +19,15 @@ if(QLITE_BUILD_MODULES)
     set(QLITE_SETUP_BUILD_MODULES ON CACHE BOOL "" FORCE)
 endif()
 
+# Contracts (Qlite/include/Qlite/v002/contracts.hpp): GCC 16 builds with NATIVE C++26 contracts,
+# so QLITE_PRE/POST/ASSERT are contract_assert under the 'enforce' semantic (a violation
+# terminates); other compilers keep the macros' runtime checks. -fcontracts on the link line
+# too, or gcc16 leaves out the default contract-violation handler.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16)
+    add_compile_options(-fcontracts -fcontract-evaluation-semantic=enforce)
+    add_link_options(-fcontracts)
+endif()
+
 enable_testing()
 
 if(QLITE_BUILD_SETUP)

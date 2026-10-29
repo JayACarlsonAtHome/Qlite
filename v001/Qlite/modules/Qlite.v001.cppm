@@ -13,6 +13,8 @@ module;
 
 #include <sqlite3.h>
 
+#include "Qlite/v001/contracts.hpp"   // QLITE_PRE/POST/ASSERT, used by the bodies
+
 #include <string>
 #include <string_view>
 #include <stdexcept>

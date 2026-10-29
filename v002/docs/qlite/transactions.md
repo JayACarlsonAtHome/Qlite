@@ -1,8 +1,8 @@
 # Transactions — v002
 
 The transaction API, and the **RAII transaction guard** that kills the forgot-to-rollback
-bug class (feature #1). v002 is the **C++26** world — the guard's state invariants are
-guarded by the contracts shim (see [Cpp26_Adoption.md](../Cpp26_Adoption.md)).
+bug class (feature #1). v002 is the **C++26** world; the guard itself carries no contracts
+(a second commit or rollback is a no-op, below); see [Cpp26_Adoption.md](../Cpp26_Adoption.md).
 
 See also: [persistence.md](persistence.md) · [binding.md](binding.md) ·
 [errors.md](errors.md).
@@ -58,7 +58,7 @@ the "forgot to roll back on the error path" bug by construction.
 | Nested transactions / savepoints | **No** — flat `BEGIN TRANSACTION` only; no `SAVEPOINT` nesting. |
 | Exceptions during the destructor's rollback | **Swallowed** — `~Transaction()` wraps `rollback()` in `try { … } catch (...) {}`; no logging. |
 
-_Filled against `Sqlite.body.hpp`. The contracts shim guards bind/step indices elsewhere; the
+_Filled against `Sqlite.body.hpp`. Contracts guard column reads and SQLite bind indices elsewhere; the
 transaction guard's state machine is pointer-nulling, not `QLITE_PRE`-checked today._
 
 ---

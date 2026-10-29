@@ -15,7 +15,7 @@ See also: [persistence.md](persistence.md) · [transactions.md](transactions.md)
 
 | Layer | Catches | Mechanism |
 |-------|---------|-----------|
-| **Contracts shim** (`QLITE_PRE/POST/ASSERT`) | programmer misuse (bad index, wrong state) | runtime fail-fast today; native `pre`/`post`/`contract_assert` when `__cpp_contracts` lands |
+| **Contracts** (`QLITE_PRE/POST/ASSERT`) | programmer misuse (no current row, a column or bind index out of range) | native `contract_assert` with GCC 16, a runtime fail-fast check elsewhere; either way the program ends |
 | **Throwing API** (`SqliteError`) | runtime SQLite failures | C++ exceptions, `code()` carries the result code |
 | **`std::expected` path** (`try_*`) | runtime SQLite failures, without exceptions | `std::expected<…, SqliteError>` |
 

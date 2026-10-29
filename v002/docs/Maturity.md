@@ -36,14 +36,14 @@ The honest split to assess is **craft vs. structure**, plus a **frontier caveat*
   shared-runner anti-drift discipline. _Rung: TBD._
 - **Structure** — solo author, no external CI by design (the local runner *is* the CI),
   results committed into the repo. _Rung: TBD._
-- **Frontier caveat** — v002 stands on **experimental** ground (C++26, a contracts *shim*
-  not native contracts, C++ modules). That's deliberate and valuable as a
+- **Frontier caveat** — v002 stands on **experimental** ground (C++26, contracts native only
+  on GCC 16, C++ modules). That's deliberate and valuable as a
   toolchain example, but it caps "settledness" until the standard and tools catch up.
 
 ## What would move the needle
 
 - **Up to professional (5–7):** the `Qlite_test_cli` matrix landing, a recorded results
-  run, the valgrind gate wired in, contracts shim migrating cleanly toward native P2900.
+  run, the valgrind gate wired in.
 - **Toward hardened (8):** fuzzing the bind/column paths, ASan/UBSan alongside valgrind, a
   security pass over the SQL-facing surface.
 - **Business rungs (9+):** organizational scaffolding (CI/CD, releases, contributors) —
@@ -52,5 +52,5 @@ The honest split to assess is **craft vs. structure**, plus a **frontier caveat*
 ## The honest caveats
 
 - _TBD — fill with the real limits once the suite runs._
-- v002 rides experimental C++26 toolchains; the contracts are a **shim**, not native.
+- v002 rides experimental C++26 toolchains; contracts are native only on GCC 16 (runtime checks elsewhere).
 - Anti-drift via the shared runner is a discipline, not a substitute for external review.

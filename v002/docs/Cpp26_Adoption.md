@@ -1,6 +1,6 @@
 // File:    docs/Cpp26_Adoption.md
 // Purpose: What C++26 is available on our toolchains, what Qlite v002 has adopted, and the
-//          migration plan for features that aren't compiler-ready yet (contracts).
+//          plan for the rest; contracts are native on GCC 16 (see Contracts).
 
 # C++26 Adoption — Qlite v002
 
@@ -20,33 +20,36 @@ why the worlds are duplicated so v002 can advance independently.
 | system g++ (old) | ❌ | too old — not used for v002 |
 | **gcc-toolset-15 (GCC 15.2.x)** | ✅ (intended) | the standard build compiler — _confirm_ |
 | **clang 21.x** | ⚠️ (intended) | second gate — _confirm; record any workaround in [findings/](findings/README.md)_ |
-| gcc-toolset-16 / GCC 16 | _TBD_ | would add native contracts / reflection |
+| **GCC 16.2.1** (Fedora 44) | ✅ | `__cpp_contracts 202502L` at `-std=c++26` (measured 2026-10-29): native contracts |
+| clang 22.1.8 (Fedora 44) | ✅ | no `__cpp_contracts` (measured 2026-10-29) |
 
 _Exact `__cplusplus` values and the available feature-test macros: **_TBD_** — record from
 a real `-dM` dump, not from memory._
 
-## The `contracts` shim (adopted)
+## Contracts (adopted)
 
-ISO **contracts** (P2900) are **not available yet** on the intended gates — no
-`__cpp_contracts`; the native `pre()/post()/contract_assert()` syntax errors on GCC 15.2 /
-clang 21. v002 adopts a **`contracts` shim** so the wrapper can express its invariants
-today and migrate mechanically later:
+`Qlite/include/Qlite/v002/contracts.hpp` gives `QLITE_PRE` / `QLITE_POST` / `QLITE_ASSERT`,
+one spelling for every compiler. Database.hpp (and the module) includes it before the bodies.
 
-```cpp
-// Qlite/Setup contracts shim — runtime fail-fast checks today
-QLITE_PRE(idx >= 1);                 // precondition
-QLITE_POST(rc == SQLITE_OK);         // postcondition
-QLITE_ASSERT(stmt != nullptr);       // mid-function assertion
-```
+| Compiler | What the macros are |
+|---|---|
+| **GCC 16** (`-std=c++26`) | native C++26 `contract_assert` (P2900). This world's CMakeLists.txt adds `-fcontracts -fcontract-evaluation-semantic=enforce` (compile and link): a violation terminates. GCC 16 turns contracts on at C++26 by itself, but links the violation handler only with `-fcontracts`, so any consumer building these headers at C++26 with GCC 16 links with it. |
+| clang (22 has no `__cpp_contracts`), GCC 15, any C++23 build | a runtime check that prints the condition and where, then aborts |
+| `-DQLITE_CONTRACTS_ENABLED=0` | nothing |
 
-| Shim macro | Today (runtime) | Native C++26 (when `__cpp_contracts`) |
-|------------|-----------------|----------------------------------------|
-| `QLITE_PRE(cond)` | runtime fail-fast check | `pre(cond)` on the function declarator |
-| `QLITE_POST(cond)` | runtime fail-fast check | `post(r: cond)` on the function declarator |
-| `QLITE_ASSERT(cond)` | runtime fail-fast check | `contract_assert(cond)` |
+What is checked (programmer errors; what the database reports stays an `Error`):
 
-_Exact macro names and the shim header path are **_TBD_** — owned by the Setup component
-(mirrors jac313's `contracts.hpp` pattern)._
+- **Reading a column needs a current row** (`get`, `get_row`, `get_at`, `get_by_name`), and a
+  column inside it. Before `step()`, or after it returned false, SQLite and PostgreSQL read
+  as NULL / 0 without a word, and MariaDB handed back the previous row.
+- **SQLite binds name placeholders:** `bind(a, b, ...)` takes no more values than the SQL has
+  `?`s, and `bind_int64` / `bind_double` / `bind_text` / `bind_blob` / `bind_null` take an
+  index from 1 to that count. SQLite returns `SQLITE_RANGE` for these, which went unchecked,
+  so the value was dropped. (PostgreSQL and MariaDB already throw for a count that does not match.)
+
+Test: `qlite_v002_contracts_test` (SQLite; each misuse terminates, the right use does not).
+The checks sit in the function body, not on the declarator: a macro cannot put `pre()` /
+`post()` there portably.
 
 ## What C++26 buys Qlite
 
@@ -55,7 +58,7 @@ for the wrapper — mark each as done/not-yet as the code lands:
 
 | C++26 feature | Where it could help Qlite |
 |---------------|---------------------------|
-| **contracts (via shim)** | pre/post on `bind_*` index ranges, `step`/`reset` statement state, transaction-guard invariants |
+| **contracts** | done: a current row for column reads, SQLite bind counts and indices (see Contracts) |
 | **`std::span::at` / bounds** | bounds-checked blob reads on the column side |
 | **saturating arithmetic** | overflow-safe size/offset math for blob and `get_all` buffers |
 | **`= delete("reason")`** | clearer diagnostics on deleted copy of RAII types (`Sqlite`, `Statement`, the transaction guard) |
@@ -72,17 +75,6 @@ constant-eval / modules defect), it gets isolated to a minimal reproducer in
 and the workaround v002 ships.
 
 _No finding recorded yet — ready to fill today._
-
-## Migration plan — native contracts
-
-When a contracts-capable compiler is available (`__cpp_contracts` defined):
-
-- `QLITE_PRE(cond)` / `QLITE_POST(cond)` → native `pre(cond)` / `post(r: cond)` on the
-  function declarator.
-- `QLITE_ASSERT(cond)` → `contract_assert(cond)`.
-
-The shim header is the **single place to flip**; call sites are written to port
-mechanically.
 
 ## Building with C++26
 

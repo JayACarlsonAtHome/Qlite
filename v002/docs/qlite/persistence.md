@@ -1,8 +1,8 @@
 # Connection, RAII, and the statement cache — v002
 
 The connection lifetime, how RAII owns every SQLite resource, and the **prepared-statement
-cache** (feature #2). v002 is the **C++26** world — resource invariants are guarded by the
-contracts shim (see [Cpp26_Adoption.md](../Cpp26_Adoption.md)).
+cache** (feature #2). v002 is the **C++26** world; its contracts are on statement use (a
+current row, bind indices), not on the connection (see [Cpp26_Adoption.md](../Cpp26_Adoption.md)).
 
 See also: [transactions.md](transactions.md) · [binding.md](binding.md) ·
 [errors.md](errors.md).

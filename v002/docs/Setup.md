@@ -10,8 +10,8 @@ The [v002 README](../README.md) is the overview; this is the how-to. For the C++
 
 **C++26** is required. The wrapper itself depends only on system SQLite3 development
 headers; the `std::expected` non-throwing path is guarded by `__cpp_lib_expected`, and the
-C++26 contracts are expressed through a shim (runtime today; native when `__cpp_contracts`
-lands).
+C++26 contracts are `QLITE_PRE/POST/ASSERT` (`Qlite/include/Qlite/v002/contracts.hpp`): native
+with GCC 16, runtime checks elsewhere.
 
 **gcc-toolset-15 / GCC 15.2** and **clang 21** are the intended C++26 gates. Module builds
 need the **Ninja** generator and CMake >= 3.28 (the distro package
