@@ -88,6 +88,25 @@ void run(D& db, const Dialect& d) {
     db.exec(std::format("UPDATE items SET name = {} WHERE id = {}", p(1), p(2)), std::string("plain"), std::int64_t{2});
     check(db.changes() == 1, d.name + ": an UPDATE to the same value counts its row");
 
+    // changes() is the last DML's count: a transaction's COMMIT, a SELECT with rows and a
+    // prepare leave it; a DELETE sets it.
+    sel.reset();
+    b.reset();
+    db.exec("UPDATE items SET price = price");
+    check(db.changes() == 2, d.name + ": an UPDATE of every row counts both");
+    db.begin();
+    db.commit();
+    auto one = db.prepare(std::format("SELECT id FROM items WHERE id = {}", p(1)));
+    one.bind(std::int64_t{1});
+    check(one.step() && !one.step(), d.name + ": a SELECT of one row");
+    db.prepare_cached(std::format("SELECT name FROM items WHERE price > {}", p(1)));
+    check(db.changes() == 2, d.name + ": COMMIT, SELECT and prepare leave changes()");
+    db.exec(std::format("DELETE FROM items WHERE id = {}", p(1)), std::int64_t{2});
+    check(db.changes() == 1, d.name + ": a DELETE of one row counts it");
+    ins.bind(std::int64_t{2}, std::string("plain"), 0.1, std::optional<std::string>("a note"),
+             std::span<const std::byte>(blob).first(0));
+    ins.step();
+
     check(get_top_one_long(db, "SELECT COUNT(*) FROM items") == 2, d.name + ": get_top_one_long");
     check(get_top_one_string(db, std::format("SELECT name FROM items WHERE id = {}", p(1)).c_str(), std::int64_t{1}) == odd,
           d.name + ": get_top_one_string with a bound value");
