@@ -1,6 +1,6 @@
 // Death-test for Qlite's contracts (on SQLite, which needs no server): reading a column with
-// no current row or past the row, and binding past the placeholders, must terminate; the
-// same calls used rightly must not.
+// no current row or past the row, and binding other than one value per placeholder, must
+// terminate; the same calls used rightly must not.
 
 #include <Qlite/v001/Sqlite.hpp>
 
@@ -81,6 +81,11 @@ int main() {
         auto db = table();
         auto st = db.prepare("SELECT id FROM t WHERE id = ?");
         st.bind(1, 2);
+    });
+    expect(true, "fewer values than placeholders", [] {
+        auto db = table();
+        auto st = db.prepare("SELECT id FROM t WHERE id = ? AND name = ?");
+        st.bind(1);
     });
     expect(true, "bind_text past the placeholders", [] {
         auto db = table();

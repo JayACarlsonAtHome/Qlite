@@ -230,6 +230,46 @@ void run(D& db, const Dialect& d) {
     try { db.exec("SELECT nope FROM no_such_table"); }
     catch (const Qlite::v001::Error&) { threw = true; }
     check(threw, d.name + ": a bad statement throws Qlite::v001::Error");
+
+    // Two statements in one prepare(): the second would never run, so it is refused.
+    threw = false;
+    try { (void)db.prepare("SELECT 1; SELECT 2"); }
+    catch (const Qlite::v001::Error&) { threw = true; }
+    check(threw, d.name + ": prepare() refuses two statements");
+
+    // A statement moved after it stepped still reads its row and steps on.
+    {
+        auto first = db.prepare("SELECT id, name FROM items ORDER BY id");
+        check(first.step(), d.name + ": a row to move with");
+        auto second = std::move(first);
+        std::int64_t mid = 0;
+        std::string mname;
+        second.get(mid, mname);
+        check(mid == 1 && mname == odd, d.name + ": a moved statement reads its row");
+        auto third = db.prepare("SELECT 1");
+        third = std::move(second);
+        check(third.step(), d.name + ": a move-assigned statement steps on");
+        third.get(mid, mname);
+        check(mid == 2 && mname == "plain", d.name + ": and reads the next row");
+    }
+
+    // A moved connection keeps its cached statements, and they point at the new object.
+    {
+        D moved(std::move(db));
+        auto& again = moved.prepare_cached("SELECT COUNT(*) FROM items");
+        check(&again == &cached, d.name + ": the cache moved with the connection");
+        std::int64_t n = 0;
+        check(again.step(), d.name + ": a cached statement steps after the connection moved");
+        again.get(n);
+        check(n == 3, d.name + ": and reads after the connection moved");
+        again.reset();
+        db = std::move(moved);
+        n = 0;
+        check(cached.step(), d.name + ": a cached statement steps after the connection moved back");
+        cached.get(n);
+        check(n == 3, d.name + ": and reads after it moved back");
+        cached.reset();
+    }
 }
 
 }  // namespace suite

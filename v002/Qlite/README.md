@@ -10,7 +10,7 @@ depends only on system SQLite3. Public symbols: `Sqlite` (with `Statement`, `Tra
 `version`.
 
 `version()` returns `"major.minor"`: major = the `v002` API line, minor = revision (bump on
-each small code change; breaking changes move major). Current: **`v002.011`**.
+each small code change; breaking changes move major). Current: **`v002.016`**.
 
 Standalone this is jac313 minus the umbrella: `Qlite::v002` ↔ `jac313::Qlite::v002`.
 
@@ -103,8 +103,8 @@ intact.
 ### C++26 contracts
 
 Misuse ends the program: reading a column with no current row (before `step()`, or after it
-returned false) or past the row, and on SQLite binding more values than placeholders or an
-index past them (`QLITE_PRE`, `include/Qlite/v002/contracts.hpp`). With GCC 16 these are native
+returned false) or past the row, and on SQLite binding other than one value per placeholder
+or an index past them (`QLITE_PRE`, `include/Qlite/v002/contracts.hpp`). With GCC 16 these are native
 C++26 contracts; elsewhere runtime checks. See
 [Cpp26_Adoption.md](../docs/Cpp26_Adoption.md).
 
