@@ -1,0 +1,65 @@
+//File:    STATUS.jtext
+//Purpose: Work status of this repo for the jacSTATUS page: what is in progress, what is next,
+//         and the questions waiting for an answer. Update it in the same commit as the work.
+//         Values never contain '|'. An empty cell means none (never NULL).
+//         questions: the question is open while answer is empty; fill answer to close it.
+//
+=== jText File ===
+ 1. #?# STATUS
+ 3. #?# Work status of Qlite
+
+
+=== Section: in_progress ===
+
+
+=== Fields ===
+ 1. #/# id/Identity(1,1)/Not Null
+ 2. #/# item/String/Not Null
+ 3. #/# detail/String/Not Null
+ 4. #/# started/Date/Not Null
+ 5. #/# who/String/Not Null          # Jay, or the Claude session (e.g. Claude jay-35)
+=== End Fields ===
+
+
+=== Data ===
+
+=== End Data ===
+=== End Section ===
+
+
+=== Section: next ===
+
+
+=== Fields ===
+ 1. #/# id/Identity(1,1)/Not Null
+ 2. #/# priority/Integer/Not Null    # 1 = first
+ 3. #/# item/String/Not Null
+ 4. #/# detail/String/Not Null
+=== End Fields ===
+
+
+=== Data ===
+1. #|# 1|1|Docs pass with the breaking changes|Deferred by Jay until things shake out. v00x.017: bind() needs one value per placeholder, prepare() refuses two statements, changes() counts only INSERT/UPDATE/DELETE/MERGE, SQLite step errors carry the message, moves keep cached statements. README version line and Cpp26_Adoption to follow.
+
+=== End Data ===
+=== End Section ===
+
+
+=== Section: questions ===
+
+
+=== Fields ===
+ 1. #/# id/Identity(1,1)/Not Null
+ 2. #/# question/String/Not Null
+ 3. #/# context/String/Not Null
+ 4. #/# asked/Date/Not Null
+ 5. #/# asked_by/String/Not Null
+ 6. #/# answer/String/Not Null       # empty = still open
+=== End Fields ===
+
+
+=== Data ===
+
+=== End Data ===
+=== End Section ===
+=== End File ===
