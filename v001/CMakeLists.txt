@@ -10,6 +10,20 @@ project(Qlite_world_v001 VERSION 0.1.0 LANGUAGES CXX
 # report the signed/unsigned mixes clang's -Wconversion already does.
 add_compile_options(-Wformat=2 -Werror=format -Wconversion -Wsign-conversion)
 
+# Extra warnings, opt-in: the same set as jac313's JAC313_STRICT.
+option(QLITE_STRICT "Extra warnings: -Wall -Wextra -Wpedantic and friends" OFF)
+option(QLITE_STRICT_WERROR "With QLITE_STRICT: treat those warnings as errors" OFF)
+if(QLITE_STRICT)
+    # -Wnull-dereference is left out: on gcc 15 it fires only inside libstdc++ <streambuf>.
+    add_compile_options(
+        -Wall -Wextra -Wpedantic
+        -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Woverloaded-virtual
+        -Wimplicit-fallthrough)
+    if(QLITE_STRICT_WERROR)
+        add_compile_options(-Werror)
+    endif()
+endif()
+
 # Deliberate default: Debug for local development and test baselines.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type (Debug default)" FORCE)

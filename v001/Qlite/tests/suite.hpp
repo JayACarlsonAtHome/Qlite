@@ -151,7 +151,7 @@ void run(D& db, const Dialect& d) {
                 std::int64_t{2}, std::int64_t{0}, 0.0, 0, std::string());                             // zero / empty
         db.exec(std::format("INSERT INTO top_one (id) VALUES ({})", p(1)), std::int64_t{3});           // all NULL
         const auto q = [&](const char* col) { return std::format("SELECT {} FROM top_one WHERE id = {}", col, p(1)); };
-        const std::string n = q("n"), x = q("x"), b = q("b"), s = q("s");
+        const std::string n = q("n"), x = q("x"), bq = q("b"), s = q("s");
         const std::int64_t VAL = 1, ZERO = 2, NUL = 3, NONE = 99;
         using I = std::optional<std::int64_t>;
         using X = std::optional<double>;
@@ -172,8 +172,8 @@ void run(D& db, const Dialect& d) {
         check(get_top_one<int>(db, n.c_str(), VAL) == 42 && get_top_one<int>(db, n.c_str(), NUL) == 0, d.name + ": top-one int");
         check(get_top_one_double(db, x.c_str(), VAL) == 2.5 && get_top_one_double(db, x.c_str(), ZERO) == 0.0 &&
               get_top_one_double(db, x.c_str(), NUL) == 0.0 && get_top_one_double(db, x.c_str(), NONE) == 0.0, d.name + ": top-one double: 2.5, 0, NULL 0, no row 0");
-        check(get_top_one_bool(db, b.c_str(), VAL) && !get_top_one_bool(db, b.c_str(), ZERO) &&
-              !get_top_one_bool(db, b.c_str(), NUL) && !get_top_one_bool(db, b.c_str(), NONE), d.name + ": top-one bool: true, false, NULL false, no row false");
+        check(get_top_one_bool(db, bq.c_str(), VAL) && !get_top_one_bool(db, bq.c_str(), ZERO) &&
+              !get_top_one_bool(db, bq.c_str(), NUL) && !get_top_one_bool(db, bq.c_str(), NONE), d.name + ": top-one bool: true, false, NULL false, no row false");
         check(get_top_one_string(db, s.c_str(), VAL) == "forty-two" && get_top_one_string(db, s.c_str(), ZERO).empty() &&
               get_top_one_string(db, s.c_str(), NUL).empty() && get_top_one_string(db, s.c_str(), NONE).empty(), d.name + ": top-one string: value, \"\", NULL \"\", no row \"\"");
 
@@ -182,8 +182,8 @@ void run(D& db, const Dialect& d) {
               !get_top_one<I>(db, n.c_str(), NUL) && !get_top_one<I>(db, n.c_str(), NONE), d.name + ": top-one optional<int64>: 42, 0, NULL none, no row none");
         check(get_top_one<X>(db, x.c_str(), VAL) == 2.5 && get_top_one<X>(db, x.c_str(), ZERO) == 0.0 &&
               !get_top_one<X>(db, x.c_str(), NUL) && !get_top_one<X>(db, x.c_str(), NONE), d.name + ": top-one optional<double>");
-        check(get_top_one<Bo>(db, b.c_str(), VAL) == true && get_top_one<Bo>(db, b.c_str(), ZERO) == false &&
-              !get_top_one<Bo>(db, b.c_str(), NUL) && !get_top_one<Bo>(db, b.c_str(), NONE), d.name + ": top-one optional<bool>: NULL is none, not false");
+        check(get_top_one<Bo>(db, bq.c_str(), VAL) == true && get_top_one<Bo>(db, bq.c_str(), ZERO) == false &&
+              !get_top_one<Bo>(db, bq.c_str(), NUL) && !get_top_one<Bo>(db, bq.c_str(), NONE), d.name + ": top-one optional<bool>: NULL is none, not false");
         check(get_top_one<S>(db, s.c_str(), VAL) == "forty-two" && get_top_one<S>(db, s.c_str(), ZERO) == std::string() &&
               !get_top_one<S>(db, s.c_str(), NUL) && !get_top_one<S>(db, s.c_str(), NONE), d.name + ": top-one optional<string>: \"\" is a value, NULL none");
 
@@ -191,7 +191,7 @@ void run(D& db, const Dialect& d) {
         check(get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, VAL) == 42 && get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, NUL) == 0 &&
               get_top_one_long_or(db, n.c_str(), std::int64_t{-7}, NONE) == -7, d.name + ": top-one long_or");
         check(get_top_one_or<double>(db, x.c_str(), 7.5, NUL) == 0.0 && get_top_one_or<double>(db, x.c_str(), 7.5, NONE) == 7.5, d.name + ": top-one or<double>");
-        check(!get_top_one_bool_or(db, b.c_str(), true, NUL) && get_top_one_bool_or(db, b.c_str(), true, NONE), d.name + ": top-one bool_or");
+        check(!get_top_one_bool_or(db, bq.c_str(), true, NUL) && get_top_one_bool_or(db, bq.c_str(), true, NONE), d.name + ": top-one bool_or");
         check(get_top_one_string_or(db, s.c_str(), "none", ZERO).empty() && get_top_one_string_or(db, s.c_str(), "none", NONE) == "none",
               d.name + ": top-one string_or (a text default, not debug)");
         check(get_top_one_or<I>(db, n.c_str(), I{5}, NUL) == std::nullopt && get_top_one_or<I>(db, n.c_str(), I{5}, NONE) == 5,
@@ -221,7 +221,7 @@ void run(D& db, const Dialect& d) {
         check(log.find("[SQL] -> NULL") != std::string::npos, d.name + ": debug prints NULL");
         log = stderr_of([&] { (void)get_top_one_string(db, s.c_str(), true, NONE); });
         check(log.find("(no row)") != std::string::npos, d.name + ": debug prints no row");
-        log = stderr_of([&] { (void)get_top_one_bool_debug(db, b.c_str(), VAL); });
+        log = stderr_of([&] { (void)get_top_one_bool_debug(db, bq.c_str(), VAL); });
         check(log.find("[SQL] -> true") != std::string::npos, d.name + ": _debug prints true");
         log = stderr_of([&] { (void)get_top_one_string(db, s.c_str(), false, VAL); });
         check(log.empty(), d.name + ": debug off prints nothing");
