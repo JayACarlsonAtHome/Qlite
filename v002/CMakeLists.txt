@@ -3,6 +3,13 @@ cmake_minimum_required(VERSION 3.26)
 project(Qlite_world_v002 VERSION 0.1.0 LANGUAGES CXX
         DESCRIPTION "Qlite v002 — C++26 world (Qlite SQLite wrapper + Setup sensing)")
 
+# Format checks, always on: a printf-style call whose arguments do not match its format
+# (e.g. a 64-bit value given to %d) is an error, not undefined behaviour at run time.
+# Conversion warnings, always on: a value silently narrowed or changing sign (size_t into int,
+# int into unsigned, 64-bit into float). Warnings, not errors; -Wsign-conversion makes gcc
+# report the signed/unsigned mixes clang's -Wconversion already does.
+add_compile_options(-Wformat=2 -Werror=format -Wconversion -Wsign-conversion)
+
 # Deliberate default: Debug for local development and test baselines.
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type (Debug default)" FORCE)
